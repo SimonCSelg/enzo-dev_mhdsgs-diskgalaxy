@@ -222,12 +222,12 @@ public:
 
 	double pd_B_r(double r, double z)
 	{
-		return magn_fract*(1.0-r/r_sc)*exp(-r/r_sc)*exp(-z/z_sc)/kpc;
+		return magn_fract*(1.0-r/r_sc)*exp(-r/r_sc)*exp(-z/z_sc)/kpc_cm;
 	}
 
 	double pd_B_z(double r, double z)
 	{
-		return magn_fract*r/r_sc*exp(-r/r_sc)*(-1.0/z_sc)*exp(-z/z_sc)/kpc;
+		return magn_fract*r/r_sc*exp(-r/r_sc)*(-1.0/z_sc)*exp(-z/z_sc)/kpc_cm;
 	}
 
 	double Emag(double r, double z)

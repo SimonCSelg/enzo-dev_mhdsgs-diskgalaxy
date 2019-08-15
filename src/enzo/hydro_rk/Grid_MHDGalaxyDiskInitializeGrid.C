@@ -383,7 +383,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 																	)/LengthUnits;
 			//h_0[sphere]=VelocitySound[sphere]/sqrt(pi*MyGrav/2.0*RealSphereDensity[sphere]);
 			if((MyProcessorNumber == ROOT_PROCESSOR))
-				printf( "Natural scale height (kpc) =  %.2e\n",h_0[sphere]*LengthUnits/Mpc*1.0e3);
+				printf( "Natural scale height (kpc) =  %.2e\n",h_0[sphere]*LengthUnits/Mpc_cm*1.0e3);
 		}
 		else
 		{
