@@ -1142,6 +1142,7 @@ POBJS_CONFIG_LIB = \
 OBJS_HYDRO_RK = \
 	hydro_rk/MHDGalaxyDiskInitialize.o \
 	hydro_rk/Grid_MHDGalaxyDiskInitializeGrid.o \
+	hydro_rk/HydrostaticDisk.o \
 	hydro_rk/ModifiedBesselFunctions.o \
 	hydro_rk/AGNDiskInitialize.o \
         hydro_rk/Collapse1DInitialize.o \
