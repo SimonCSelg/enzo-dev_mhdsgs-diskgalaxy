@@ -223,6 +223,8 @@ int MHDDecayingRandomFieldInitialize(FILE *fptr, FILE *Outfptr,
 			    HierarchyEntry &TopGrid, TopGridData &MetaData, int SetBaryonFields);
 int GalaxyDiskInitialize(FILE *fptr, FILE *Outfptr, 
 			 HierarchyEntry &TopGrid, TopGridData &MetaData);
+int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
+			    HierarchyEntry &TopGrid, TopGridData &MetaData);
 int AGNDiskInitialize(FILE *fptr, FILE *Outfptr, 
 		      HierarchyEntry &TopGrid, TopGridData &MetaData);
 int FreeExpansionInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid,
@@ -676,6 +678,11 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
   /* 210) MHD Decaying random magnetic fields */
   if (ProblemType == 210) {
     ret = MHDDecayingRandomFieldInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+  }
+
+  // MHD Disk Galaxies
+  if (ProblemType == 217) {
+	  ret = MHDGalaxyDiskInitialize(fptr, Outfptr, TopGrid, MetaData);
   }
 
   // 250 ) Cosmic Ray Shocktube Problem
