@@ -237,7 +237,7 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 	if (etot < temp_etot_min && EOSType == 0)
 	// ADD TIMER
 	{       
-		TIMER_START("MinimumEnergyLimiter");
+		TIMER_START("MinimumInternalEnergyLimiter");
 		if (! (output_block))
 		{
 			printf("WARNING: etot = %.6e, eint = %.6e, 0.5v2 = %.6e,"
@@ -248,7 +248,7 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 			output_block=true;
 		}
 		etot = temp_etot_min;
-		TIMER_STOP("MinimumEnergyLimiter");
+		TIMER_STOP("MinimumInternalEnergyLimiter");
 	}
 	// END
 	// ===================================================================
