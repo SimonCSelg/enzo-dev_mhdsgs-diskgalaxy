@@ -4,7 +4,8 @@
 /
 /  written by: Peng Wang
 /  date:       June, 2007
-/  modified1:
+/  modified1:  Simon Selg
+/  date:       August, 2019
 /
 /
 ************************************************************************/
@@ -140,8 +141,14 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 
   n = 0;
   FLOAT x, y, z, r;
+  
+  // ==========================================================================
+  // S. Selg (08/2019): part of the energy limiter; limit display output to 
+  //                    first occurrence on respective grid
+  // --------------------------------------------------------------------------
+  bool output_block=false;
+  //=========================================================================== 
 
- 
   for (k = GridStartIndex[2]; k <= GridEndIndex[2]; k++) {
     for (j = GridStartIndex[1]; j <= GridEndIndex[1]; j++) {
       for (i = GridStartIndex[0]; i <= GridEndIndex[0]; i++, n++) {
@@ -206,8 +213,41 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 	vy = S2_new/D_new;
 	vz = S3_new/D_new;
 	etot = Tau_new/D_new;
-
-	
+	// ====================================================================
+        /* S. Selg (08/2019): The following addition is being made to the code: 
+	 * It is inspired by an addition K. Rodenbeck did in order to deal with 
+	 * problems of locally confined negative energy. The following steps are
+	 * taken:
+	 * 1. Get current solution of magnetic field and velocity: compute their
+	 *    their respective energetic contributions
+	 * 2. Define a lower mininum for the internal energy, associated with a 
+	 *    temperature, temp_floor
+	 * 3. Use these to compute a current minimum value for the total energy
+	 * 4. Check whether etot < temp_etot? etot=temp_etot and issue a warning
+	 */
+	// BEGIN
+	float temp_v2 = 0.5 * (vx * vx + vy * vy + vz * vz);
+	float temp_B2 = 0.5 * (Bx_new * Bx_new + By_new * By_new + Bz_new * Bz_new) / D_new;
+	// min eint (originally: T=1000, mu=0.6)
+	float temp_floor = 1000. / tempu / ((Gamma - 1.0) * 0.6);
+	// min etot
+	float temp_etot_min = temp_floor + temp_v2 + temp_B2;
+	// check if etot < etot_min and adjust accordingly
+	if (etot < temp_etot_min && EOSType == 0)
+	{
+		if (! (output_block))
+		{
+			printf("WARNING: etot = %.6e, eint = %.6e, 0.5v2 = %.6e,"
+					"0.5B2/rho = %.6e! Correcting etot to " 
+					"%.6e\n",
+					etot, etot - temp_v2 - temp_B2, temp_v2,
+					temp_B2, temp_etot_min);
+			output_block=true;
+		}
+		etot = temp_etot_min;
+	}
+	// END
+	// ===================================================================
 	if (etot < 0 && EOSType == 0) {
 	  float v2_old = vx_old*vx_old + vy_old*vy_old + vz_old*vz_old;
 	  float B2_old = Bx_old*vx_old + By_old*By_old + Bz_old*Bz_old;
@@ -216,7 +256,7 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 	  printf("rho_new=%"GSYM", rho=%"GSYM", rho_old=%"GSYM", B2_old/rho_old=%"GSYM"\n", D_new, rho, rho_old, B2_old/rho_old);
 	  //return FAIL;
 	}
-
+ 
 
 	// if using polytropic EOS, calculate etot directly from density
 	if (EOSType > 0) { 
