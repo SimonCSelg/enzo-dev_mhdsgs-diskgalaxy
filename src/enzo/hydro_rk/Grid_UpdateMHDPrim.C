@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "ErrorExceptions.h"
+#include "EnzoTiming.h"  // S. Selg (08/2019): added a timer
 #include "macros_and_parameters.h"
 #include "typedefs.h"
 #include "global_data.h"
@@ -234,7 +235,9 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 	float temp_etot_min = temp_floor + temp_v2 + temp_B2;
 	// check if etot < etot_min and adjust accordingly
 	if (etot < temp_etot_min && EOSType == 0)
-	{
+	// ADD TIMER
+	{       
+		TIMER_START("MinimumEnergyLimiter");
 		if (! (output_block))
 		{
 			printf("WARNING: etot = %.6e, eint = %.6e, 0.5v2 = %.6e,"
@@ -245,6 +248,7 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 			output_block=true;
 		}
 		etot = temp_etot_min;
+		TIMER_STOP("MinimumEnergyLimiter");
 	}
 	// END
 	// ===================================================================
