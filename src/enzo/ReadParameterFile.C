@@ -10,6 +10,8 @@
 /  date:       February 29th, 2008
 /  modified3:  Robert Harkness
 /  date:       May, 2008
+/  modified4:  Simon Selg
+/  date:       August 2019
 /
 /  PURPOSE:
 /
@@ -543,7 +545,9 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     ret += sscanf(line, "WritePotential        = %"ISYM, &WritePotential);
     ret += sscanf(line, "ParticleSubgridDepositMode  = %"ISYM, &ParticleSubgridDepositMode);
     ret += sscanf(line, "WriteAcceleration      = %"ISYM, &WriteAcceleration);
- 
+    // Minimum Internal Energy Limiter (S. Selg, 09/2019)
+    ret += sscanf(line, "MinimumInternalEnergyLimiter = %"ISYM, &MinimumInternalEnergyLimiter); 
+    ret += sscanf(line, "MinimumInternalEnergyLimiter_Temperature = %"FSYM, &MinimumInternalEnergyLimiter_Temperature);
     ret += sscanf(line, "DualEnergyFormalism     = %"ISYM, &DualEnergyFormalism);
     ret += sscanf(line, "DualEnergyFormalismEta1 = %"FSYM,
 		  &DualEnergyFormalismEta1);
