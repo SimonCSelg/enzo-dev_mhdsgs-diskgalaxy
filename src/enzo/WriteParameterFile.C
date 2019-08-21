@@ -1252,6 +1252,7 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData, char *name = NULL)
 				       *POW(float(RefineBy), float(MustRefineParticlesRefineToLevel))),3);
   // Minimum Internal Energy Limiter (S. Selg, 08/2019)
   fprintf(fptr, "MinimumInternalEnergyLimiter = %"ISYM"\n", MinimumInternalEnergyLimiter);
+  fprintf(fptr, "MinimumInternalEnergyLimiter_Temperature = %"FSYM"\n", MinimumInternalEnergyLimiter_Temperature);
   //MHDCT variables
   fprintf(fptr, "MHDCTSlopeLimiter          = %"ISYM"\n", MHDCTSlopeLimiter);
   fprintf(fptr, "MHDCTDualEnergyMethod          = %"ISYM"\n", MHDCTDualEnergyMethod);

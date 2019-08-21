@@ -233,7 +233,8 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 		float temp_B2 = 0.5 * (Bx_new * Bx_new + By_new * By_new + 
 				       Bz_new * Bz_new) / D_new;
 		// min eint (originally: T=1000, mu=0.6)
-		float temp_floor = 1000. / tempu / ((Gamma - 1.0) * 0.6);
+		float temp_floor = MinimumInternalEnergyLimiter_Temperature / 
+			tempu / ((Gamma - 1.0) * 0.6);
 		// min etot
 		float temp_etot_min = temp_floor + temp_v2 + temp_B2;
 		// check if etot < etot_min and adjust accordingly
@@ -249,6 +250,9 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 				       "Correcting etot to %.6e\n",
 					etot, etot - temp_v2 - temp_B2, temp_v2,
 					temp_B2, temp_etot_min);
+				printf("Minimum Internal Energy Limiter, "
+				       "New temperature: %.6e\n", 
+				       MinimumInternalEnergyLimiter_Temperature);
 				output_block=true;
 			}
 			etot = temp_etot_min;

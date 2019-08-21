@@ -1001,6 +1001,7 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   // Minimum InternalEnergy Limiter (08/2019)
   // --------------------------------------------------------------------------
   MinimumInternalEnergyLimiter = 0; // off
+  MinimumInternalEnergyLimiter_Temperature = 1000.0; // Kelvin
   // ==========================================================================
 
   //MHDCT variables

@@ -1157,6 +1157,7 @@ EXTERN char *MHDeUnits[3];
 // Minimum InternalEnergy Limiter (08/2019)
 EXTERN int MinimumInternalEnergyLimiter;  // toggle eint limiter used in 
                                           // Grid_UpdateMHDPrim
+EXTERN float MinimumInternalEnergyLimiter_Temperature; // Kelvin
 // ============================================================================
 
 /* For the database */

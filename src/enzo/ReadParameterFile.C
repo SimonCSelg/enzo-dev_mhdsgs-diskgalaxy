@@ -547,6 +547,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
     ret += sscanf(line, "WriteAcceleration      = %"ISYM, &WriteAcceleration);
     // Minimum Internal Energy Limiter (S. Selg, 09/2019)
     ret += sscanf(line, "MinimumInternalEnergyLimiter = %"ISYM, &MinimumInternalEnergyLimiter); 
+    ret += sscanf(line, "MinimumInternalEnergyLimiter_Temperature = %"FSYM, &MinimumInternalEnergyLimiter_Temperature);
     ret += sscanf(line, "DualEnergyFormalism     = %"ISYM, &DualEnergyFormalism);
     ret += sscanf(line, "DualEnergyFormalismEta1 = %"FSYM,
 		  &DualEnergyFormalismEta1);
