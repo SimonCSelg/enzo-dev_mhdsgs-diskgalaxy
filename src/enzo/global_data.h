@@ -7,6 +7,7 @@
 /  modified:   Robert Harkness
 /  date:       February, 2004
 /  modified:   Robert Harkness, August 12th 2006
+/  modified:   Simon Selg, August 20th 2019
 /
 /  PURPOSE:
 /    This is the global data, which should be held to a minimum.  Any changes
@@ -1151,6 +1152,12 @@ EXTERN char *MHDLabel[3];
 EXTERN char *MHDUnits[3];
 EXTERN char *MHDeLabel[3];
 EXTERN char *MHDeUnits[3];
+
+// ============================================================================
+// Minimum InternalEnergy Limiter (08/2019)
+EXTERN int MinimumInternalEnergyLimiter;  // toggle eint limiter used in 
+                                          // Grid_UpdateMHDPrim
+// ============================================================================
 
 /* For the database */
 EXTERN char *DatabaseLocation;

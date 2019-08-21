@@ -6,6 +6,8 @@
 /  date:       November, 1994
 /  modified1:  Robert Harkness
 /  date:       February 29th, 2008
+/  modified2:  Simon Selg
+/  date2:      August 20th, 2019
 /
 /  PURPOSE:
 /
@@ -1248,6 +1250,8 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData, char *name = NULL)
 
   MustRefineParticlesMinimumMass /= POW(1/(float(MetaData.TopGridDims[0])
 				       *POW(float(RefineBy), float(MustRefineParticlesRefineToLevel))),3);
+  // Minimum Internal Energy Limiter (S. Selg, 08/2019)
+  fprintf(fptr, "MinimumInternalEnergyLimiter = %"ISYM"\n", MinimumInternalEnergyLimiter);
   //MHDCT variables
   fprintf(fptr, "MHDCTSlopeLimiter          = %"ISYM"\n", MHDCTSlopeLimiter);
   fprintf(fptr, "MHDCTDualEnergyMethod          = %"ISYM"\n", MHDCTDualEnergyMethod);
@@ -1279,7 +1283,7 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData, char *name = NULL)
   fprintf(fptr, "MagneticSupernovaRadius = %"GSYM"\n", MagneticSupernovaRadius);
   fprintf(fptr,"MagneticSupernovaEnergy = %"GSYM"\n",MagneticSupernovaEnergy);
   fprintf(fptr,"MagneticSupernovaDuration = %"GSYM"\n",MagneticSupernovaDuration);
-
+  
   /* Output current time */
   time_t ID;
   ID = time(NULL);

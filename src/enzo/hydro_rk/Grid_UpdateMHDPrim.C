@@ -227,31 +227,36 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 	 * 4. Check whether etot < temp_etot? etot=temp_etot and issue a warning
 	 */
 	// BEGIN
-	float temp_v2 = 0.5 * (vx * vx + vy * vy + vz * vz);
-	float temp_B2 = 0.5 * (Bx_new * Bx_new + By_new * By_new + Bz_new * Bz_new) / D_new;
-	// min eint (originally: T=1000, mu=0.6)
-	float temp_floor = 1000. / tempu / ((Gamma - 1.0) * 0.6);
-	// min etot
-	float temp_etot_min = temp_floor + temp_v2 + temp_B2;
-	// check if etot < etot_min and adjust accordingly
-	if (etot < temp_etot_min && EOSType == 0)
-	// ADD TIMER
-	{       
-		TIMER_START("MinimumInternalEnergyLimiter");
-		if (! (output_block))
-		{
-			printf("WARNING: etot = %.6e, eint = %.6e, 0.5v2 = %.6e,"
-					"0.5B2/rho = %.6e! Correcting etot to " 
-					"%.6e\n",
+	if (MinimumInternalEnergyLimiter == 1)
+	{
+		float temp_v2 = 0.5 * (vx * vx + vy * vy + vz * vz);
+		float temp_B2 = 0.5 * (Bx_new * Bx_new + By_new * By_new + 
+				       Bz_new * Bz_new) / D_new;
+		// min eint (originally: T=1000, mu=0.6)
+		float temp_floor = 1000. / tempu / ((Gamma - 1.0) * 0.6);
+		// min etot
+		float temp_etot_min = temp_floor + temp_v2 + temp_B2;
+		// check if etot < etot_min and adjust accordingly
+		if (etot < temp_etot_min && EOSType == 0)
+		// ADD TIMER
+		{       
+			TIMER_START("MinimumInternalEnergyLimiter");
+			if (! (output_block))
+			{
+				printf("Minimum Internal Energy Limiter, "
+				       "WARNING: etot = %.6e, eint = %.6e, "
+				       "0.5v2 = %.6e, 0.5B2/rho = %.6e!" 
+				       "Correcting etot to %.6e\n",
 					etot, etot - temp_v2 - temp_B2, temp_v2,
 					temp_B2, temp_etot_min);
-			output_block=true;
+				output_block=true;
+			}
+			etot = temp_etot_min;
+			TIMER_STOP("MinimumInternalEnergyLimiter");
 		}
-		etot = temp_etot_min;
-		TIMER_STOP("MinimumInternalEnergyLimiter");
 	}
 	// END
-	// ===================================================================
+	// ============================================================
 	if (etot < 0 && EOSType == 0) {
 	  float v2_old = vx_old*vx_old + vy_old*vy_old + vz_old*vz_old;
 	  float B2_old = Bx_old*vx_old + By_old*By_old + Bz_old*Bz_old;

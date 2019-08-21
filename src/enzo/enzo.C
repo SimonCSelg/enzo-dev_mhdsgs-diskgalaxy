@@ -7,7 +7,8 @@
 /  modified:   Robert Harkness
 /  date:       August 12th 2006
 /              May 13th 2008
-/
+/  modified2:  Simon Selg
+/  date:       August 20th 2019
 /  PURPOSE:
 /    This is main() for the amr code.  It interprets the arguments and
 /    then calls the appropriate routines depending on whether we are
