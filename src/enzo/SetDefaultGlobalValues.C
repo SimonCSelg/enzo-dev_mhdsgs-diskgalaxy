@@ -6,7 +6,8 @@
 /  date:       November, 1994
 /  modified:   Robert Harkness
 /  date:       February 29th, 2008
-/
+/  modified2:  Simon Selg 
+/  date:       August 20th, 2019
 /  PURPOSE:
 /
 /  RETURNS: SUCCESS or FAIL
@@ -995,6 +996,13 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   ShearingBoxProblemType = 0; 
   UseMHD=0;
   MaxVelocityIndex = 3;
+
+  // ==========================================================================
+  // Minimum InternalEnergy Limiter (08/2019)
+  // --------------------------------------------------------------------------
+  MinimumInternalEnergyLimiter = 0; // off
+  MinimumInternalEnergyLimiter_Temperature = 1000.0; // Kelvin
+  // ==========================================================================
 
   //MHDCT variables
   MHDCTSlopeLimiter = 1;

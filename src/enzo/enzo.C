@@ -7,7 +7,8 @@
 /  modified:   Robert Harkness
 /  date:       August 12th 2006
 /              May 13th 2008
-/
+/  modified2:  Simon Selg
+/  date:       August 20th 2019
 /  PURPOSE:
 /    This is main() for the amr code.  It interprets the arguments and
 /    then calls the appropriate routines depending on whether we are
@@ -305,6 +306,7 @@ Eint32 MAIN_NAME(Eint32 argc, char *argv[])
   TIMER_REGISTER("RebuildHierarchy");
   TIMER_REGISTER("SetBoundaryConditions");
   TIMER_REGISTER("SolveHydroEquations");
+  TIMER_REGISTER("MinimumInternalEnergyLimiter");
   TIMER_REGISTER("Total");
 
 #ifdef USE_LCAPERF
