@@ -184,7 +184,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			VelocityUnits,
 			CriticalDensity = 1,
 			BoxLength = 1,
-			mu = 0.6;
+			mu = Mu;
 	
 	double MyGrav=GravConst;
 	
