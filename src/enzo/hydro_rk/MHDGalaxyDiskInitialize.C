@@ -44,7 +44,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
   const char *Vel1Name = "x-velocity";
   const char *Vel2Name = "y-velocity";
   const char *Vel3Name = "z-velocity";
-	
+  
+  // S. Selg (08/2019): Gravitational Potential (for output)
+  const char *GPotName          = "Grav_Potential";  
   const char *Bfield1Name	= "Bx";
   const char *Bfield2Name	= "By";
   const char *Bfield3Name	= "Bz";
@@ -564,6 +566,10 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
     DataLabel[count++] = (char*) ColourName;
   if (MHDGalaxyDiskUseMetals)
     DataLabel[count++] = (char*) MetalName;
+
+  // S. Selg (08/2019): toggle output of gravitational potential
+  if (WritePotential)
+	  DataLabel[count++] = (char*) GPotName;
 
   for (i = 0; i < count; i++)
     DataUnits[i] = NULL;
