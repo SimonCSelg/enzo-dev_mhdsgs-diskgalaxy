@@ -167,6 +167,10 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	if (SphereUseColour)
 		FieldType[NumberOfBaryonFields++] = Metallicity; /* fake it with metals */
 	
+	// S. Selg (08/2019): Toggle output of gravitational potential
+	if (WritePotential)
+		FieldType[NumberOfBaryonFields++] = GravPotential;
+
 	/* Return if this doesn't concern us. */
 	
 	if (ProcessorNumber != MyProcessorNumber)
