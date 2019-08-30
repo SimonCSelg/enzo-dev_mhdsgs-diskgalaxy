@@ -84,8 +84,8 @@ public:
 				data[i][j].rho = data[i][j].ln_rho = data[i][j].rho_0 = data[i][j].v_sqr = 0.0;
 				data[i][j].c_s = sound_speed;
 			}
-
-			data[i][0].rho = sigma*exp(-data[i][0].r/r_sc)/dz;
+			
+			data[i][0].rho = sigma*exp(-data[i][0].r/r_sc)/z_sc;
 			data[i][0].rho_0 = data[i][0].rho;
 		}
 		
