@@ -4,7 +4,8 @@
 /
 /  written by: Greg Bryan
 /  date:       May, 1998
-/  modified1:
+/  modified1:  Simon Selg
+/  date1:      08/2019
 /
 /  PURPOSE:
 /    Set up a number of spherical objects
@@ -73,7 +74,6 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
   int   dim, ret, level, sphere, i;
 
   /* set default parameters */
-
   int MHDGalaxyDiskNumberOfSpheres = 1;
   int MHDGalaxyDiskRefineAtStart   = TRUE;
   int MHDGalaxyDiskUseParticles    = FALSE;
@@ -89,7 +89,8 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
       MHDGalaxyDiskType[MAX_SPHERES],
       MHDGalaxyDiskConstantPressure[MAX_SPHERES],
       MHDGalaxyDiskMagnEquipart[MAX_SPHERES],
-      MHDGalaxyDiskSmoothSurface[MAX_SPHERES];
+      MHDGalaxyDiskSmoothSurface[MAX_SPHERES],
+      MHDGalaxyDiskPressureGradientType[MAX_SPHERES]; // S.C.S (08/2019)
 
   float MHDGalaxyDiskDensity[MAX_SPHERES],
         MHDGalaxyDiskTemperature[MAX_SPHERES],
@@ -115,6 +116,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
         MHDGalaxyDiskAngularMomentum[MAX_SPHERES][MAX_DIMENSION];
 
   for (sphere = 0; sphere < MAX_SPHERES; sphere++) {
+    MHDGalaxyDiskPressureGradientType[sphere]   = 0; // S.C.S (08/2019)
     MHDGalaxyDiskDensity[sphere]		= 1.0;
     MHDGalaxyDiskTemperature[sphere]	= 1.0;
     MHDGalaxyDiskFracKeplerianRot[sphere]	= 0.0;
@@ -178,6 +180,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
     ret += sscanf(line, "MHDGalaxyDiskUniformVelocity = %"FSYM" %"FSYM" %"FSYM, 
 		  MHDGalaxyDiskUniformVelocity, MHDGalaxyDiskUniformVelocity+1,
 		  MHDGalaxyDiskUniformVelocity+2);
+    if (sscanf(line, "MHDGalaxyDiskPressureGradientType[%"ISYM"]", &sphere) > 0)
+	    ret += sscanf(line, "MHDGalaxyDiskPressureGradientType[%"ISYM"] = %"ISYM, &sphere,
+			    &MHDGalaxyDiskPressureGradientType[sphere]);
     if (sscanf(line, "MHDGalaxyDiskType[%"ISYM"]", &sphere) > 0)
       ret += sscanf(line, "MHDGalaxyDiskType[%"ISYM"] = %"ISYM, &sphere,
 		    &MHDGalaxyDiskType[sphere]);
@@ -309,7 +314,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 			MHDGalaxyDiskInitialTemperature,
 			MHDGalaxyDiskInitialDensity,
 			MHDGalaxyDiskInitialMagnField,
-			
+		        MHDGalaxyDiskPressureGradientType,	
 			0) == FAIL) {
     ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
   }
@@ -434,7 +439,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 				MHDGalaxyDiskInitialTemperature,
 				MHDGalaxyDiskInitialDensity,
 				MHDGalaxyDiskInitialMagnField,
-				
+				MHDGalaxyDiskPressureGradientType,
 				lev-1) == FAIL) {
 		ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
 	      }
@@ -498,6 +503,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 			MHDGalaxyDiskInitialTemperature,
 			MHDGalaxyDiskInitialDensity,
 			MHDGalaxyDiskInitialMagnField,
+			MHDGalaxyDiskPressureGradientType,
 			level+1) == FAIL) {
 	    ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
 	  }

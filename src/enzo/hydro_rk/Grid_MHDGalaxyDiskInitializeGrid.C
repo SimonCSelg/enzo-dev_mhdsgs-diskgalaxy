@@ -107,6 +107,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					float InitialTemperature,
 					float InitialDensity,
 					float InitialMagnField,
+					int PressureGradientType[MAX_SPHERES],
 					int level)
 {
 	/* declarations */
@@ -474,6 +475,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		Galaxy[sphere].set_magn_fract(SphereMagnFactor[sphere]);
 		Galaxy[sphere].set_halo_mass(HaloMass[sphere]*SolarMass);
 		Galaxy[sphere].set_halo_scale(HaloCoreRadius[sphere]*LengthUnits);
+		Galaxy[sphere].set_pressureGradientType(PressureGradientType[sphere]);  // S.C.S (08/2019)
 		if(SphereMagnEquipart[sphere]==1)
 			Galaxy[sphere].set_magn_equipart();
 		

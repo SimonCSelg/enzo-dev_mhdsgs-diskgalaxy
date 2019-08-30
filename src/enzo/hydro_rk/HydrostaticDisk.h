@@ -5,6 +5,7 @@
 /  written by: Kai Rodenbeck
 /  date:       2015
 /  modified1:  Wolfram Schmidt, January 2018
+/  modified2:  Simon Selg, August 2019
 /
 /  PURPOSE: Iterative computation of axisymmetric disk galaxy 
 /     in hydrostatic equilibrium
@@ -23,7 +24,7 @@ class hydrostatic_disk
 {
 private:
 	bool equipart;
-
+	int pressureGradientType; // S.Selg; see Wang+2010, Eq. 30
 	int N_r, N_z;
 
 	static const double eight_pi = 8.0*pi;
@@ -42,7 +43,8 @@ public:
 	// default constructor
 	hydrostatic_disk() 
 	{
-		equipart = false;		
+		equipart = false;	
+		pressureGradientType = 0;	
 		N_r=0;
 		N_z=0;
 		dr=0.0;
@@ -58,6 +60,7 @@ public:
 	hydrostatic_disk(int N1, int N2, double delta1, double delta2, double scale1, double scale2, double vel, double sound_speed)
 	{
 		equipart = false;
+		pressureGradientType = 0;
 		N_r=N1;
 		N_z=N2;
 		dr=delta1;
@@ -128,6 +131,11 @@ public:
  	void set_magn_equipart()
 	{
 		equipart = true;
+	}
+
+	void set_pressureGradientType(int val)
+	{
+		pressureGradientType = val;
 	}
 
  	void set_magn_fract(double val)
