@@ -215,11 +215,13 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	double MagnConversionFactor=sqrt(4.0*3.14159/(VelocityUnits*VelocityUnits)/DensityUnits);
 	
-	/* Loop over the set-up twice, once to count the particles, the second time to initialize them. */
+	/* =====================================================================
+	 * S. Selg (10/2019): N-BODY REALIZATION OF A DARK MATTER HALO. 
+	 */
 	
-	int SetupLoopCount, npart = 0;
+	int npart = 0;
 	
-		/* Set densities */
+	/* Set densities */
 		
 	float BaryonMeanDensity, ParticleCount = 0;
 	switch (SphereUseParticles)
@@ -244,21 +246,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	/* Set particles. */
 	
-	if (SphereUseParticles > 0 )
-	{
-		/* If particles already exist (coarse particles), then delete. */
-		if (NumberOfParticles > 0)
-			this->DeleteParticles();
-		
-		/* Use count from previous loop to set particle number. */
-		NumberOfParticles = npart;
-		npart = 0;
-		
-		/* Allocate space. */
-		this->AllocateNewParticles(NumberOfParticles);
-		
-		/* Particle values will be set below. */
-	} // end: particle initialization
 	
 	/* Set up the baryon field. */
 	
