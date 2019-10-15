@@ -14,6 +14,13 @@
 /
 ************************************************************************/
 
+// S. Selg (10/2019) Extra includes for file reading 
+#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <string>
+// ---
+
 #include "preincludes.h"
 #include <stdlib.h>
 #include "macros_and_parameters.h"
@@ -176,6 +183,9 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	if (ProcessorNumber != MyProcessorNumber)
 	{
+//		NumberOfParticles = (SphereUseParticles >0) ? 1 : 0;
+//		for (dim = 0; dim < GridRank; dim++)
+//			NumberOfParticles *= (GridEndIndex[dim] - GridStartIndex[dim] + 1);
 		return SUCCESS;
 	}
 	
@@ -217,10 +227,117 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	/* =====================================================================
 	 * S. Selg (10/2019): N-BODY REALIZATION OF A DARK MATTER HALO. 
+	 *
+	 * STAGE I: Get the number of particles in order to allocate memory.
 	 */
-	
-	int npart = 0;
-	
+
+	if (SphereUseParticles == 1 && level == 0) // > 1 would not be specific 
+	{		             		   // since the following 
+						   // refers to DM
+		int ParticleLoopCount = 0;
+//		if (NumberOfParticles > 0)
+//			this->DeleteParticles();
+		int npart = 0;
+		for (ParticleLoopCount = 0; ParticleLoopCount < 2; ParticleLoopCount++)
+		{
+			if (ParticleLoopCount == 1)
+			{
+				// STAGE II: Delete old particles
+				if (NumberOfParticles > 0)
+					this->DeleteParticles();
+				NumberOfParticles = npart;
+				npart = 0;
+				// STAGE III: Allocate new ones
+				this->AllocateNewParticles(NumberOfParticles);
+			}	
+		
+
+			// GET CELL GRID FACE COORDINATES
+			double grdXLow  = CellLeftEdge[0][GridStartIndex[0]];
+			double grdXHigh = CellLeftEdge[0][GridEndIndex[0]] + 
+				CellWidth[0][GridEndIndex[0]];
+			double grdYLow  = CellLeftEdge[1][GridStartIndex[1]];
+			double grdYHigh = CellLeftEdge[1][GridEndIndex[1]] +
+				CellWidth[1][GridEndIndex[1]];
+			double grdZLow  = CellLeftEdge[2][GridStartIndex[2]];
+			double grdZHigh = CellLeftEdge[2][GridEndIndex[2]] +
+				CellWidth[2][GridEndIndex[2]];
+			double preCompX;	// x-coordinate
+			double preCompY;        // y-coordinate
+			double preCompZ;        // z-coordinate
+			double preCompVelX;     // vx
+			double preCompVelY;  	// vy
+			double preCompVelZ;     // vz
+			double preCompMass;     // particle mass
+			double preCompDist;     // particle distance towards center
+					// of halo
+			double preCompInterDist;// mean particle-particle distance
+
+			// ITERATE HALOS
+			for (sphere = 0; sphere < NumberOfSpheres; sphere++)
+			{
+				// WE READ THE PARTICLE ICs FROM FILE
+				std::ifstream particle_file;
+				particle_file.open("particle_ic");
+
+				if (particle_file.is_open())
+				{
+					std::string line;
+					getline(particle_file, line); // 1st line
+			        	while (particle_file.good())
+					{
+						// WE'LL ASSING VARIABLES TO PARTICLE
+						// DATA INFERRED FROM FILE
+						// READ FILE INTO MEMORY
+						sscanf(line.c_str(), "%lf%lf%lf%lf%lf%lf%lf%lf%lf",
+							&preCompX,
+							&preCompY,
+							&preCompZ,
+							&preCompVelX,
+							&preCompVelY,
+							&preCompVelZ,
+							&preCompMass,
+							&preCompDist,
+							&preCompInterDist);
+						// CHECK IF THE PARTICLE FITS ONTO THE
+						// GRID
+						bool isInGrd = (preCompX / LengthUnits + SpherePosition[sphere][0] >= grdXLow) &&
+							(preCompX / LengthUnits + SpherePosition[sphere][0] <= grdXHigh) &&
+							(preCompY / LengthUnits + SpherePosition[sphere][1] >= grdYLow) &&
+							(preCompY / LengthUnits + SpherePosition[sphere][1] <= grdYHigh) &&
+							(preCompZ / LengthUnits + SpherePosition[sphere][2] >= grdZLow) &&
+							(preCompZ / LengthUnits + SpherePosition[sphere][2] <= grdZHigh);
+						// IF IT FITS, I SITS :)
+						if (isInGrd)
+						{
+							if (ParticleLoopCount == 1)
+							{
+								// STAGE IV: assign particle properties
+								ParticleMass[npart]        = preCompMass / pow(CellWidth[0][GridStartIndex[0]], 3.0) / (DensityUnits * pow(LengthUnits, 3.0));
+								ParticleNumber[npart]      = CollapseTestParticleCount++;
+								ParticleType[npart]        = PARTICLE_TYPE_DARK_MATTER;
+								ParticlePosition[0][npart] = preCompX / LengthUnits + SpherePosition[sphere][0];
+								ParticlePosition[1][npart] = preCompY / LengthUnits + SpherePosition[sphere][1];
+								ParticlePosition[2][npart] = preCompZ / LengthUnits + SpherePosition[sphere][2];
+								ParticleVelocity[0][npart] = preCompVelX / VelocityUnits + SphereVelocity[sphere][0];
+								ParticleVelocity[1][npart] = preCompVelY / VelocityUnits + SphereVelocity[sphere][1];
+								ParticleVelocity[2][npart] = preCompVelZ / VelocityUnits + SphereVelocity[sphere][2];
+							}
+							npart++;
+
+						}
+					
+						getline(particle_file, line); // advance
+								      // by one
+								      // line
+					} // CLOSING WHILE	
+				
+				} // CLOSING IF
+				particle_file.close();
+			} // CLOSING FOR spheres
+		} // CLOSING FOR ParticleCountLoop
+
+	} // CLOSING IF DM particles
 	/* Set densities */
 		
 	float BaryonMeanDensity, ParticleCount = 0;
@@ -243,9 +360,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		ParticleMeanDensity = 1.0 - BaryonMeanDensity;
 	else
 		BaryonMeanDensity = 1.0 - ParticleMeanDensity;
-	
-	/* Set particles. */
-	
 	
 	/* Set up the baryon field. */
 	
@@ -556,20 +670,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			double rcyln = sqrt(xposn*xposn +yposn*yposn);
 			rn = fmax(rn, 0.01*CellWidth[0][0]);
 			//rcyln = max(rcyln, 0.1*CellWidth[0][0]);
-			
-			double rh = r/HaloCoreRadius[sphere];
-			if(rn<HaloRadius[sphere] && SphereUseParticles==1)
-			{
-				DM_rho=Halo_rho[sphere]/(rh*pow(1.0+rh,3.0));
-				DM_vel[0]=SphereVelocity[sphere][0];
-				DM_vel[1]=SphereVelocity[sphere][1];
-				DM_vel[2]=SphereVelocity[sphere][2];
-				DM_sigma=Halo_disp[sphere]*(
-				12.0*rh*(rh+1.0)*(rh+1.0)*(rh+1.0)*log((rh+1.0)/rh)
-				 - rh/(rh+1.0)*(25.0+52.0*rh+42.0*rh*rh+12.0*rh*rh*rh)
-				 );
-			}
-			
+						
 			/* Compute Cartesian coordinates for rotational properties */
 			
 			//outer_radius = (SphereSmoothSurface[sphere] == TRUE) ? 
@@ -886,8 +987,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	
 	
-	if (SphereUseParticles)
-		printf("CollapseTestInitialize: NumberOfParticles = %"ISYM"\n", NumberOfParticles);
+	if (SphereUseParticles && ProcessorNumber == MyProcessorNumber)
+		printf("MHDGalaxyDisk: NumberOfParticles = %"ISYM"\n", NumberOfParticles);
 	
 	return SUCCESS;
 }

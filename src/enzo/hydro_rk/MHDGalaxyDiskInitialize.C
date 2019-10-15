@@ -37,7 +37,8 @@ int RebuildHierarchy(TopGridData *MetaData,
 		     LevelHierarchyEntry *LevelArray[], int level);
 
 int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr, 
-			  HierarchyEntry &TopGrid, TopGridData &MetaData)
+			  HierarchyEntry &TopGrid, TopGridData &MetaData
+		)
 {
   const char *DensName = "Density";
   const char *TEName   = "TotalEnergy";
@@ -329,18 +330,102 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 	     float(MetaData.TopGridDims[dim]);
     }
 
+  // (S. Selg, 10/2019) The following lines use the code from ClusterInitialize and are to 
+  // implement a refinement at start 
+  // If requested, refine the grids to the desired level
+  if (MHDGalaxyDiskRefineAtStart) {
+	  // Declare, initialize and fill out the LevelArray
+	  LevelHierarchyEntry *LevelArray[MAX_DEPTH_OF_HIERARCHY];
+	  for (level = 0; level < MAX_DEPTH_OF_HIERARCHY; level++)
+		  LevelArray[level] = NULL;
+	  AddLevel(LevelArray, &TopGrid, 0);
+	  // Add levels to the maximum depth until no new levels are created,
+	  // and re-initialize the level after it's created. 
+	  for (level = 0; level < MaximumRefinementLevel; level++) 
+	  {
+		  if (RebuildHierarchy(&MetaData, LevelArray, level) == FAIL)
+		  {
+			  fprintf(stderr, "Error in RebuildHierarchy.\n");
+			  return FAIL;
+		  }
+		  if (LevelArray[level+1] == NULL)
+			  break;
+		  LevelHierarchyEntry *Temp = LevelArray[level+1];
+		  while (Temp != NULL)
+		  {
+			  if (Temp->GridData->MHDGalaxyDiskInitializeGrid(
+				MHDGalaxyDiskNumberOfSpheres,
+				MHDGalaxyDiskRadius,
+				MHDGalaxyDiskAngularMomentum,
+				MHDGalaxyDiskCoreRadius,
+				MHDGalaxyDiskDensity,
+				MHDGalaxyDiskTemperature,
+				MHDGalaxyDiskMetallicity,
+				MHDGalaxyDiskPosition,
+				MHDGalaxyDiskVelocity,
+				MHDGalaxyDiskFracKeplerianRot,
+				MHDGalaxyDiskTurbulence,
+				MHDGalaxyDiskDispersion,
+				MHDGalaxyDiskCutOff,
+				MHDGalaxyDiskAng1,
+				MHDGalaxyDiskAng2,
+				MHDGalaxyDiskNumShells,
+				MHDGalaxyDiskType,
+				MHDGalaxyDiskConstantPressure,
+				MHDGalaxyDiskSmoothSurface,
+				MHDGalaxyDiskSmoothRadius,
+				MHDGalaxyDiskMagnFactor,
+				MHDGalaxyDiskMagnEquipart,
+				MHDGalaxyDiskHaloMass,
+				MHDGalaxyDiskHaloCoreRadius,
+				MHDGalaxyDiskHaloRadius,
+				MHDGalaxyDiskUseParticles,
+				MHDGalaxyDiskParticleMeanDensity,
+				MHDGalaxyDiskUniformVelocity,
+				MHDGalaxyDiskUseColour,
+				MHDGalaxyDiskUseMetals,
+				MHDGalaxyDiskInitialTemperature,
+				MHDGalaxyDiskInitialDensity,
+				MHDGalaxyDiskInitialMagnField,
+				MHDGalaxyDiskPressureGradientType,
+				level+1) == FAIL) 
+				{
+					fprintf(stderr, "Error in MHDGalaxyDiskInitializeGrid.\n");
+					return FAIL;
+				}
+			  Temp = Temp->NextGridThisLevel;
+		  }
+	  } // end: loop over levels
+
+	  // Loop back from the bottom, restoring the consistency among levels.
+	  for (level = MaximumRefinementLevel; level > 0; level --)
+	  {
+		  LevelHierarchyEntry *Temp = LevelArray[level];
+		  while (Temp != NULL)
+		  {
+			  if (Temp->GridData->ProjectSolutionToParentGrid(*Temp->GridHierarchyEntry->ParentGrid->GridData) == FAIL) 
+			  {
+				  fprintf(stderr, "Error in grid->ProjectSolutionToParentGrid.\n");
+				  return FAIL;
+			  }
+			  Temp = Temp->NextGridThisLevel;
+		  }
+	  }
+  } //end: if (MHDGalaxyDiskRefineAtStart)
+
+
 
   /* If requested and there are no manual settings of the refinement
      of spheres, refine the grid to the desired level. */
 
-  int MaxInitialLevel = 0;
+/*  int MaxInitialLevel = 0;
   for (sphere = 0; sphere < MHDGalaxyDiskNumberOfSpheres; sphere++)
     MaxInitialLevel = max(MaxInitialLevel, MHDGalaxyDiskInitialLevel[sphere]);
 
   if (MHDGalaxyDiskRefineAtStart) {
 
-    /* If the user specified an initial refinement level for a sphere,
-       then manually create the hierarchy first. */
+    * If the user specified an initial refinement level for a sphere,
+       then manually create the hierarchy first. 
 
     if (MaxInitialLevel > 0) {
 
@@ -450,15 +535,15 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
       } // ENDFOR spheres
     } // ENDIF MaxInitialLevel > 0
 
-    /* Declare, initialize and fill out the LevelArray. */
+     Declare, initialize and fill out the LevelArray. 
 
     LevelHierarchyEntry *LevelArray[MAX_DEPTH_OF_HIERARCHY];
     for (level = 0; level < MAX_DEPTH_OF_HIERARCHY; level++)
       LevelArray[level] = NULL;
     AddLevel(LevelArray, &TopGrid, 0);
 
-    /* Add levels to the maximum depth or until no new levels are created,
-       and re-initialize the level after it is created. */
+     Add levels to the maximum depth or until no new levels are created,
+       and re-initialize the level after it is created. 
 
     if (MaxInitialLevel == 0) {
       for (level = 0; level < MaximumRefinementLevel; level++) {
@@ -512,7 +597,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
       } // end: loop over levels
     } // ENDELSE manually set refinement levels
 
-      /* Loop back from the bottom, restoring the consistency among levels. */
+     Loop back from the bottom, restoring the consistency among levels. 
 
     for (level = MaximumRefinementLevel; level > 0; level--) {
       LevelHierarchyEntry *Temp = LevelArray[level];
@@ -525,7 +610,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
       }
     }
 
-  } // end: if (MHDGalaxyDiskRefineAtStart)
+  } // end: if (MHDGalaxyDiskRefineAtStart) */
 
 	/* set up field names and units */
 	
