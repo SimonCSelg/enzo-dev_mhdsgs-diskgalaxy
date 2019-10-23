@@ -570,9 +570,23 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
                                                 sig, VelocitySound[sphere]*VelocityUnits);
 		 
 		Galaxy[sphere].set_magn_fract(SphereMagnFactor[sphere]);
-		Galaxy[sphere].set_halo_mass(HaloMass[sphere]*SolarMass);
-		Galaxy[sphere].set_halo_scale(HaloCoreRadius[sphere]*LengthUnits);
+		// ================================================================================
+		// S. Selg (04/2019): Careful distinction whether we use a halo (indicated by the
+		// SphereUseParticles flag or not.
+		// ================================================================================
+		if (SphereUseParticles == 1)
+		{
+			Galaxy[sphere].set_halo_mass(HaloMass[sphere]*SolarMass);
+			Galaxy[sphere].set_halo_scale(HaloCoreRadius[sphere]*LengthUnits);
+		}
+		else
+		{
+			Galaxy[sphere].set_halo_mass(0.0);
+			Galaxy[sphere].set_halo_scale(0.0);
+		}
+
 		Galaxy[sphere].set_pressureGradientType(PressureGradientType[sphere]);  // S.C.S (08/2019)
+		
 		if(SphereMagnEquipart[sphere]==1)
 			Galaxy[sphere].set_magn_equipart();
 		
@@ -797,7 +811,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			
 			if(SphereUseParticles == 1)
 			{
-				vel_h_sq = Galaxy[sphere].halo_vel_sq(rcyl*LengthUnits, 0.0)*pow(SphereFracKeplerianRot[sphere],2.0) / (VelocityUnits*VelocityUnits);
+				vel_h_sq = Galaxy[sphere].halo_vel_sq(rcyl*LengthUnits, 0.0) * 
+					pow(SphereFracKeplerianRot[sphere],2.0) / (VelocityUnits*VelocityUnits);
 			}
 			double f_sm = 1.0 - fmin(1.0, fmax(0.0, (outer_radius-SphereSmoothRadius[sphere])/(1.0-SphereSmoothRadius[sphere])));
 			
