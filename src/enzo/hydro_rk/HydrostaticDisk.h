@@ -211,12 +211,15 @@ public:
 
 	double halo_pot(double r, double z)
 	{
-		return -GravConst*halo_mass/(sqrt(r*r+z*z)/halo_scale + halo_scale);
+		// Hernquist (1990), Eq. 2
+		return -GravConst * halo_mass / (sqrt(r*r+z*z) + halo_scale);
 	}
 
 	double halo_vel_sq(double r, double z)
 	{
-		return GravConst*halo_mass*sqrt(r*r+z*z)/pow(sqrt(r*r+z*z) + halo_scale, 2.0);
+		// Hernquist (1990), Eq. 16
+		return GravConst * halo_mass *sqrt(r*r+z*z) /
+			pow(sqrt(r*r+z*z) + halo_scale, 2.0);
 	}
 
         /*
