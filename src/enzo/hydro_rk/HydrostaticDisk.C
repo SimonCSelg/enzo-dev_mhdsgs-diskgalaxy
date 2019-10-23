@@ -90,7 +90,8 @@ void hydrostatic_disk::rotation_curve()
 		for(int j=0; j<N_z; j++)
 		{
 			if (pressureGradientType == 0)
-			{
+			{       // S.C.S. (10/2019): This is what I first found 
+				// after taking over.
 				if(equipart)
 					data[i][j].v_sqr = 
 						data[i][j].r/data[i][j].rho * 
