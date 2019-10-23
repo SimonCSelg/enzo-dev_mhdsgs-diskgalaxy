@@ -117,7 +117,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
         MHDGalaxyDiskAngularMomentum[MAX_SPHERES][MAX_DIMENSION];
 
   for (sphere = 0; sphere < MAX_SPHERES; sphere++) {
-    MHDGalaxyDiskPressureGradientType[sphere]   = 0; // S.C.S (08/2019)
+    MHDGalaxyDiskPressureGradientType[sphere]   = 2; // S.C.S (08/2019)
     MHDGalaxyDiskDensity[sphere]		= 1.0;
     MHDGalaxyDiskTemperature[sphere]	= 1.0;
     MHDGalaxyDiskFracKeplerianRot[sphere]	= 0.0;
