@@ -5,7 +5,7 @@
 /  written by: Greg Bryan
 /  date:       May, 1998
 /  modified1:  Simon Selg
-/  date1:      08/2019
+/  date1:      11/2019
 /
 /  PURPOSE:
 /    Set up a number of spherical objects
@@ -36,8 +36,14 @@ void AddLevel(LevelHierarchyEntry *Array[], HierarchyEntry *Grid, int level);
 int RebuildHierarchy(TopGridData *MetaData,
 		     LevelHierarchyEntry *LevelArray[], int level);
 
+// ============================================================================
+// S. Selg (11/2019): Adjustments in order to use PRGIO. Mind that there is a
+// discrimination between the states of ``SetBaryonFiels``.
+// ----------------------------------------------------------------------------
+
 int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr, 
-			  HierarchyEntry &TopGrid, TopGridData &MetaData
+			  HierarchyEntry &TopGrid, TopGridData &MetaData,
+			  int SetBaryonFields
 		)
 {
   const char *DensName = "Density";
@@ -281,7 +287,15 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 
   /* set up grid */
 
-  if (TopGrid.GridData->MHDGalaxyDiskInitializeGrid(
+  /* =========================================================================
+   * S. Selg (11/2019): Implementation of Parallel Root Grid IO (PRGIO)
+   * =========================================================================
+   */
+
+  HierarchyEntry *CurrentGrid;
+  CurrentGrid = &TopGrid;
+  while (CurrentGrid != NULL) {
+  	if (TopGrid.GridData->MHDGalaxyDiskInitializeGrid(
 			MHDGalaxyDiskNumberOfSpheres,
 			MHDGalaxyDiskRadius,
 			MHDGalaxyDiskAngularMomentum,
@@ -316,9 +330,17 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 			MHDGalaxyDiskInitialDensity,
 			MHDGalaxyDiskInitialMagnField,
 		        MHDGalaxyDiskPressureGradientType,	
-			0) == FAIL) {
-    ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
+			0,
+			SetBaryonFields) == FAIL) {
+    			ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
+  			}
+	CurrentGrid = CurrentGrid->NextGridThisLevel;
   }
+
+  /* S. Selg (11/2019): This will be done after first initialization! (if you are
+   * using prgio. */
+
+  if (SetBaryonFields) {
 
   /* Convert minimum initial overdensity for refinement to mass
      (unless MinimumMass itself was actually set). */
@@ -388,7 +410,8 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 				MHDGalaxyDiskInitialDensity,
 				MHDGalaxyDiskInitialMagnField,
 				MHDGalaxyDiskPressureGradientType,
-				level+1) == FAIL) 
+				level+1,
+				SetBaryonFields) == FAIL) 
 				{
 					fprintf(stderr, "Error in MHDGalaxyDiskInitializeGrid.\n");
 					return FAIL;
@@ -728,7 +751,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 	      MHDGalaxyDiskSmoothRadius[sphere]);
     }
   }
-
+  } // endif SetBaryonFields
   return SUCCESS;
 
 }
