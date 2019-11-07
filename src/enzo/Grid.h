@@ -3089,7 +3089,8 @@ int zEulerSweep(int j, int NumberOfSubgrids, fluxes *SubgridFluxes[],
 			       int   UseParticles, int UseGas,
 			       float UniformVelocity[MAX_DIMENSION],
 			       float MediumTemperature, float MediumDensity, int level);
-  
+
+  // S. Selg (11/2019): updated functional prototype due to prgio implementation
   int MHDGalaxyDiskInitializeGrid(int NumberOfSpheres,
 		  		  float SphereRadius[MAX_SPHERES][MAX_DIMENSION],
 				  float SphereAngularMomentum[MAX_SPHERES][MAX_DIMENSION],
@@ -3124,7 +3125,8 @@ int zEulerSweep(int j, int NumberOfSubgrids, fluxes *SubgridFluxes[],
 				  float InitialDensity,
 				  float InitialMagnField,
 				  int   PressureGradientType[MAX_SPHERES],
-				  int   level);
+				  int   level,
+				  int   SetBaryonFields);
 
   int AGNDiskInitializeGrid(float BlackHoleMass,
 			    int BlackHoleType,
