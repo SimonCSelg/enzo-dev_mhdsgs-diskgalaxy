@@ -14,6 +14,13 @@
 /
 ************************************************************************/
 
+// S. Selg (10/2019) Extra includes for file reading 
+#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <string>
+// ---
+
 #include "preincludes.h"
 #include <stdlib.h>
 #include "macros_and_parameters.h"
@@ -107,6 +114,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					float InitialTemperature,
 					float InitialDensity,
 					float InitialMagnField,
+					int PressureGradientType[MAX_SPHERES],
 					int level)
 {
 	/* declarations */
@@ -175,9 +183,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	if (ProcessorNumber != MyProcessorNumber)
 	{
-		NumberOfParticles = (SphereUseParticles > 0) ? 1 : 0;
-		for (int dim = 0; dim < GridRank; dim++)
-			NumberOfParticles *= (GridEndIndex[dim] - GridStartIndex[dim] + 1);
 		return SUCCESS;
 	}
 	
@@ -217,24 +222,130 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	double MagnConversionFactor=sqrt(4.0*3.14159/(VelocityUnits*VelocityUnits)/DensityUnits);
 	
-	/* Loop over the set-up twice, once to count the particles, the second time to initialize them. */
-	
-	int SetupLoopCount, npart = 0;
-	for (SetupLoopCount = 0; SetupLoopCount < 1+min(SphereUseParticles, 1);SetupLoopCount++)
-	{
-		/* Set densities */
-		
-		float BaryonMeanDensity, ParticleCount = 0;
-		switch (SphereUseParticles)
+	/* =====================================================================
+	 * S. Selg (10/2019): N-BODY REALIZATION OF A DARK MATTER HALO. 
+	 *
+	 * STAGE I: Get the number of particles in order to allocate memory.
+	 */
+
+	if (SphereUseParticles == 1 && level == 0) // > 1 would not be specific 
+	{		             		   // since the following 
+						   // refers to DM
+		int ParticleLoopCount = 0;
+		int npart = 0;
+		for (ParticleLoopCount = 0; ParticleLoopCount < 2; ParticleLoopCount++)
 		{
-			case 1:
-				BaryonMeanDensity = CosmologySimulationOmegaBaryonNow / OmegaMatterNow;
-				break;
-			case 2:
-				BaryonMeanDensity = 1 - CosmologySimulationOmegaBaryonNow / OmegaMatterNow;
-				break;
-			default:
-				BaryonMeanDensity = 1.0;
+			if (ParticleLoopCount == 1)
+			{
+				// STAGE II: Delete old particles
+				if (NumberOfParticles > 0)
+					this->DeleteParticles();
+				NumberOfParticles = npart;
+				npart = 0;
+				// STAGE III: Allocate new ones
+				this->AllocateNewParticles(NumberOfParticles);
+			}	
+		
+
+			// GET CELL GRID FACE COORDINATES
+			double grdXLow  = CellLeftEdge[0][GridStartIndex[0]];
+			double grdXHigh = CellLeftEdge[0][GridEndIndex[0]] + 
+				CellWidth[0][GridEndIndex[0]];
+			double grdYLow  = CellLeftEdge[1][GridStartIndex[1]];
+			double grdYHigh = CellLeftEdge[1][GridEndIndex[1]] +
+				CellWidth[1][GridEndIndex[1]];
+			double grdZLow  = CellLeftEdge[2][GridStartIndex[2]];
+			double grdZHigh = CellLeftEdge[2][GridEndIndex[2]] +
+				CellWidth[2][GridEndIndex[2]];
+			double preCompX;	// x-coordinate
+			double preCompY;        // y-coordinate
+			double preCompZ;        // z-coordinate
+			double preCompVelX;     // vx
+			double preCompVelY;  	// vy
+			double preCompVelZ;     // vz
+			double preCompMass;     // particle mass
+			double preCompDist;     // particle distance towards center
+					// of halo
+			double preCompInterDist;// mean particle-particle distance
+
+			// ITERATE HALOS
+			for (sphere = 0; sphere < NumberOfSpheres; sphere++)
+			{
+				// WE READ THE PARTICLE ICs FROM FILE
+				std::ifstream particle_file;
+				particle_file.open("particle_ic");
+
+				if (particle_file.is_open())
+				{
+					std::string line;
+					getline(particle_file, line); // 1st line
+			        	while (particle_file.good())
+					{
+						// WE'LL ASSING VARIABLES TO PARTICLE
+						// DATA INFERRED FROM FILE
+						// READ FILE INTO MEMORY
+						sscanf(line.c_str(), "%lf%lf%lf%lf%lf%lf%lf%lf%lf",
+							&preCompX,
+							&preCompY,
+							&preCompZ,
+							&preCompVelX,
+							&preCompVelY,
+							&preCompVelZ,
+							&preCompMass,
+							&preCompDist,
+							&preCompInterDist);
+						// CHECK IF THE PARTICLE FITS ONTO THE
+						// GRID
+						bool isInGrd = (preCompX / LengthUnits + SpherePosition[sphere][0] >= grdXLow) &&
+							(preCompX / LengthUnits + SpherePosition[sphere][0] <= grdXHigh) &&
+							(preCompY / LengthUnits + SpherePosition[sphere][1] >= grdYLow) &&
+							(preCompY / LengthUnits + SpherePosition[sphere][1] <= grdYHigh) &&
+							(preCompZ / LengthUnits + SpherePosition[sphere][2] >= grdZLow) &&
+							(preCompZ / LengthUnits + SpherePosition[sphere][2] <= grdZHigh);
+						// IF IT FITS, I SITS :)
+						if (isInGrd)
+						{
+							if (ParticleLoopCount == 1)
+							{
+								// STAGE IV: assign particle properties
+								ParticleMass[npart]        = preCompMass / pow(CellWidth[0][GridStartIndex[0]], 3.0) / (DensityUnits * pow(LengthUnits, 3.0));
+								ParticleNumber[npart]      = CollapseTestParticleCount++;
+								ParticleType[npart]        = PARTICLE_TYPE_DARK_MATTER;
+								ParticlePosition[0][npart] = preCompX / LengthUnits + SpherePosition[sphere][0];
+								ParticlePosition[1][npart] = preCompY / LengthUnits + SpherePosition[sphere][1];
+								ParticlePosition[2][npart] = preCompZ / LengthUnits + SpherePosition[sphere][2];
+								ParticleVelocity[0][npart] = preCompVelX / VelocityUnits + SphereVelocity[sphere][0];
+								ParticleVelocity[1][npart] = preCompVelY / VelocityUnits + SphereVelocity[sphere][1];
+								ParticleVelocity[2][npart] = preCompVelZ / VelocityUnits + SphereVelocity[sphere][2];
+							}
+							npart++;
+
+						}
+					
+						getline(particle_file, line); // advance
+								      // by one
+								      // line
+					} // CLOSING WHILE	
+				
+				} // CLOSING IF
+				particle_file.close();
+			} // CLOSING FOR spheres
+		} // CLOSING FOR ParticleCountLoop
+
+	} // CLOSING IF DM particles
+	/* Set densities */
+		
+	float BaryonMeanDensity, ParticleCount = 0;
+	switch (SphereUseParticles)
+	{
+		case 1:
+			BaryonMeanDensity = CosmologySimulationOmegaBaryonNow / OmegaMatterNow;
+			break;
+		case 2:
+			BaryonMeanDensity = 1 - CosmologySimulationOmegaBaryonNow / OmegaMatterNow;
+			break;
+		default:
+			BaryonMeanDensity = 1.0;
 	} // ENDSWITCH SphereUseParticles
 	
 	
@@ -244,24 +355,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		ParticleMeanDensity = 1.0 - BaryonMeanDensity;
 	else
 		BaryonMeanDensity = 1.0 - ParticleMeanDensity;
-	
-	/* Set particles. */
-	
-	if (SphereUseParticles > 0 && SetupLoopCount > 0)
-	{
-		/* If particles already exist (coarse particles), then delete. */
-		if (NumberOfParticles > 0)
-			this->DeleteParticles();
-		
-		/* Use count from previous loop to set particle number. */
-		NumberOfParticles = npart;
-		npart = 0;
-		
-		/* Allocate space. */
-		this->AllocateNewParticles(NumberOfParticles);
-		
-		/* Particle values will be set below. */
-	} // end: particle initialization
 	
 	/* Set up the baryon field. */
 	
@@ -273,16 +366,16 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	/* allocate fields */
 	
-	if (SetupLoopCount == 0)
-		for (field = 0; field < NumberOfBaryonFields; field++)
-			if (BaryonField[field] == NULL)
-				BaryonField[field] = new float[size];
+	
+	for (field = 0; field < NumberOfBaryonFields; field++)
+		if (BaryonField[field] == NULL)
+			BaryonField[field] = new float[size];
 	
 	/* Loop over the mesh. */
 	
 	float density, dens1, old_density, Velocity[MAX_DIMENSION], MagnField[MAX_DIMENSION],
 		DiskVelocity[MAX_DIMENSION], temperature, temp1, sigma, sigma1, 
-		colour, weight, a, DMVelocity[MAX_DIMENSION], metallicity, 
+		colour, weight, DMVelocity[MAX_DIMENSION], metallicity, 
 		outer_radius;
 	float r, rcyl, x, y = 0, z = 0;
 	int n = 0, ibin;
@@ -385,7 +478,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 																		/(SphereCoreRadius[sphere][0]*LengthUnits)
 																		/(SphereCoreRadius[sphere][1]*LengthUnits)
 																	)/LengthUnits;
-			//h_0[sphere]=VelocitySound[sphere]/sqrt(pi*MyGrav/2.0*RealSphereDensity[sphere]);
 			if((MyProcessorNumber == ROOT_PROCESSOR))
 				printf( "Natural scale height (kpc) =  %.2e\n",h_0[sphere]*LengthUnits/Mpc_cm*1.0e3);
 		}
@@ -401,9 +493,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					(MyGrav/DensityUnits/pow(TimeUnits,2))*(SphereDensity[sphere]*SolarMass)
 					/(2.0*pi*(sqrt(SphereCoreRadius[sphere][0]*SphereCoreRadius[sphere][1])*LengthUnits))
 					)/VelocityUnits;
-			// VelocityKep=sqrt(0.5*MyGrav*RealSphereDensity[sphere]*SphereCoreRadius[sphere][1]*SphereCoreRadius[sphere][2])
-			// /((double)TimeUnits/LengthUnits*VelocityUnits);
-			
+		
 			if((MyProcessorNumber == ROOT_PROCESSOR))
 				printf(	"\nGalaxy Mass (M_sun) = %.2e\n",	SphereDensity[sphere]);
 		}
@@ -472,8 +562,23 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
                                                 sig, VelocitySound[sphere]*VelocityUnits);
 		 
 		Galaxy[sphere].set_magn_fract(SphereMagnFactor[sphere]);
-		Galaxy[sphere].set_halo_mass(HaloMass[sphere]*SolarMass);
-		Galaxy[sphere].set_halo_scale(HaloCoreRadius[sphere]*LengthUnits);
+		// ================================================================================
+		// S. Selg (04/2019): Careful distinction whether we use a halo (indicated by the
+		// SphereUseParticles flag or not.
+		// ================================================================================
+		if (SphereUseParticles == 1)
+		{
+			Galaxy[sphere].set_halo_mass(HaloMass[sphere]*SolarMass);
+			Galaxy[sphere].set_halo_scale(HaloCoreRadius[sphere]*LengthUnits);
+		}
+		else
+		{
+			Galaxy[sphere].set_halo_mass(0.0);
+			Galaxy[sphere].set_halo_scale(0.0);
+		}
+
+		Galaxy[sphere].set_pressureGradientType(PressureGradientType[sphere]);  // S.C.S (08/2019)
+		
 		if(SphereMagnEquipart[sphere]==1)
 			Galaxy[sphere].set_magn_equipart();
 		
@@ -565,31 +670,14 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			r = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
 			rcyl = sqrt(xpos*xpos +ypos*ypos);
 			r = fmax(r, 0.01*CellWidth[0][0]);
-			//rcyl = max(rcyl, 0.1*CellWidth[0][0]);
 			
 			double rn = sqrt(xposn*xposn + yposn*yposn + zposn*zposn);
 			double rcyln = sqrt(xposn*xposn +yposn*yposn);
 			rn = fmax(rn, 0.01*CellWidth[0][0]);
-			//rcyln = max(rcyln, 0.1*CellWidth[0][0]);
-			
-			double rh = r/HaloCoreRadius[sphere];
-			if(rn<HaloRadius[sphere] && SphereUseParticles==1)
-			{
-				DM_rho=Halo_rho[sphere]/(rh*pow(1.0+rh,3.0));
-				DM_vel[0]=SphereVelocity[sphere][0];
-				DM_vel[1]=SphereVelocity[sphere][1];
-				DM_vel[2]=SphereVelocity[sphere][2];
-				DM_sigma=Halo_disp[sphere]*(
-				12.0*rh*(rh+1.0)*(rh+1.0)*(rh+1.0)*log((rh+1.0)/rh)
-				 - rh/(rh+1.0)*(25.0+52.0*rh+42.0*rh*rh+12.0*rh*rh*rh)
-				 );
-			}
-			
+						
 			/* Compute Cartesian coordinates for rotational properties */
 			
-			//outer_radius = (SphereSmoothSurface[sphere] == TRUE) ? 
-			//SphereSmoothRadius[sphere]*SphereRadius[sphere][0] : SphereRadius[sphere][0];
-			
+		
 			outer_radius =	 pow(xposn/SphereRadius[sphere][0],2)
 							+pow(yposn/SphereRadius[sphere][1],2)
 							+pow(zposn/SphereRadius[sphere][2],2);
@@ -635,12 +723,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			{
 				case 3:
 					{
-					//sc_h=pow(VelocitySound[sphere],2)
-					//			/(pi*MyGrav/2.0*SphereDensity[sphere]*SphereCoreRadius[sphere][2])
-					//			*exp(rcyln);
 					sc_h=h_0[sphere]*exp(rcyln);
-					//density=RealSphereDensity[sphere]/exp(2.0*rcyln)/pow(cosh(zpos/sc_h),2);
-					
+										
 					
 					double den=Galaxy[sphere].intpl_rho(rcyl*LengthUnits, fabs(zpos)*LengthUnits)/DensityUnits;
 					
@@ -651,7 +735,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 						appl_grid=false;
 						density=0.0;
 					}
-					//density=SphereDensity[sphere]*exp(-rcyln)*exp(-abs(zposn));
 					break;
 					}	
 				case 4:
@@ -670,7 +753,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 				RotVelocity[1]=SphereAngularMomentum[sphere][2]*xpos_rs-SphereAngularMomentum[sphere][0]*zpos_rs;
 				RotVelocity[2]=SphereAngularMomentum[sphere][0]*ypos_rs-SphereAngularMomentum[sphere][1]*xpos_rs;
 				
-				//double r_2=sqrt(xpos_rs*xpos_rs+ypos_rs*ypos_rs+zpos_rs*zpos_rs);
 				double r_2=sqrt(RotVelocity[0]*RotVelocity[0]+RotVelocity[1]*RotVelocity[1]+RotVelocity[2]*RotVelocity[2]);
 				
 				if(r_2>0.1*CellWidth[0][0])
@@ -698,10 +780,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			
 			if(SphereType[sphere]==3)
 			{
-				r_f=1.0/SphereRotationalPeriod[sphere]*0.5*r_test_n*sqrt(BESSI0(0.5*r_test_n)*BESSK0(0.5*r_test_n)-BESSI1(0.5*r_test_n)*BESSK1(0.5*r_test_n));
-				//s_p=-2.0*r_test_n*exp(-2.0*r_test_n)*pow(VelocitySound[sphere]*SphereFracKeplerianRot[sphere],2);
-				//s_p=-2.0*r_test_n*pow(VelocitySound[sphere]*SphereFracKeplerianRot[sphere],2);
-				
+				r_f=1.0/SphereRotationalPeriod[sphere]*0.5*r_test_n*sqrt(BESSI0(0.5*r_test_n)*BESSK0(0.5*r_test_n)-BESSI1(0.5*r_test_n)*BESSK1(0.5*r_test_n));				
 				if(appl_grid)
 					s_p = Galaxy[sphere].intpl_v_sqr(rcyl*LengthUnits, fabs(zpos)*LengthUnits)*pow(SphereFracKeplerianRot[sphere],2) /
 					      (VelocityUnits*VelocityUnits);
@@ -711,7 +790,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			
 			if(SphereUseParticles == 1)
 			{
-				vel_h_sq = Galaxy[sphere].halo_vel_sq(rcyl*LengthUnits, 0.0)*pow(SphereFracKeplerianRot[sphere],2.0) / (VelocityUnits*VelocityUnits);
+				vel_h_sq = Galaxy[sphere].halo_vel_sq(rcyl*LengthUnits, 0.0) * 
+					pow(SphereFracKeplerianRot[sphere],2.0) / (VelocityUnits*VelocityUnits);
 			}
 			double f_sm = 1.0 - fmin(1.0, fmax(0.0, (outer_radius-SphereSmoothRadius[sphere])/(1.0-SphereSmoothRadius[sphere])));
 			
@@ -736,8 +816,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 						MagnField[dim]=sqrt(2.0*SphereMagnFactor[sphere]*density)*VelocitySound[sphere]*RotVelocity[dim];
 					else
 						MagnField[dim]=MagnConversionFactor*Galaxy[sphere].B(rcyl*LengthUnits, fabs(zpos)*LengthUnits)*RotVelocity[dim];
-					//MagnField[dim]=SphereMagnFactor[sphere]*RotVelocity[dim]*rcyln/exp(2.0*rcyln)/pow(cosh(zpos/sc_h),2);
-					//MagnField[dim]+=0.001*Maxwellian(VelocitySound[sphere], VelocityUnits, mu, Gamma);
+	
 				}
 				m = 0;
 			}
@@ -763,11 +842,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					temperature = SphereTemperature[sphere] / (fmax(density,InitialDensity)/RealSphereDensity[sphere]);
 					break;
 	   		}
-			//temperature = SphereTemperature[sphere] * pow(density/SphereDensity[sphere],Gamma-1.0);
-			//temperature = SphereTemperature[sphere] / (density/SphereDensity[sphere]);
-			
+		
 			metallicity += SphereMetallicity[sphere];
-			//density=max(InitialDensity,SphereDensity[sphere]*exp(-0.5*pow(rn,2)));
 		} // end: if (r < SphereRadius)
 	} // end: loop over spheres
 	
@@ -784,23 +860,14 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		density=InitialDensity;
 	}
 	
-	//temperature = InitialTemperature;
 	
 	
 	for(int dim=0;dim<MAX_DIMENSION;dim++)
 	{
 		MagnField[dim]+=MagnConversionFactor*InitialMagnField*gasdev();//1.0e-30;
-		//MagnField[dim]=0.0;
 	}
 	
-	//double c_sound = 	sqrt((temperature * Gamma * kboltz) / 
-	//					(mu * mh)) / VelocityUnits;
-	
-	//Velocity[0] += Maxwellian(c_sound, VelocityUnits, mu, Gamma);
-	//Velocity[1] += Maxwellian(c_sound, VelocityUnits, mu, Gamma);
-	//Velocity[2] += Maxwellian(c_sound, VelocityUnits, mu, Gamma);
-	
-	
+
 	/* Set density. */
 	
 	BaryonField[0][n] = density*BaryonMeanDensity;
@@ -813,7 +880,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		CoolData.HydrogenFractionByMass * BaryonField[0][n] *
 			sqrt(OmegaMatterNow)/
 			(OmegaMatterNow*BaryonMeanDensity*HubbleConstantNow);
-		//(CosmologySimulationOmegaBaryonNow*HubbleConstantNow);
 		
 		BaryonField[HeIINum][n] = CosmologySimulationInitialFractionHeII*
 			BaryonField[0][n] * 4.0 * (1.0-CoolData.HydrogenFractionByMass);
@@ -832,7 +898,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 				BaryonField[0][n]*CoolData.HydrogenFractionByMass*pow(301.0,5.1)*
 				pow(OmegaMatterNow, float(1.5))/
 				(OmegaMatterNow*BaryonMeanDensity)/
-				//CosmologySimulationOmegaBaryonNow/
 			HubbleConstantNow*2.0;
 		}
 		
@@ -891,62 +956,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 				BaryonField[1][n] += 0.5*pow(BaryonField[imag+dim][n], 2)/BaryonField[0][n];
 		}
 		
-	/* Set particles if being used (generate a number of particle proportional to density). */
-	
-	if (SphereUseParticles)
-		if (i >= GridStartIndex[0] && i <= GridEndIndex[0] &&
-			j >= GridStartIndex[1] && j <= GridEndIndex[1] &&
-			k >= GridStartIndex[2] && k <= GridEndIndex[2]  )
-		{
-			//ParticleCount += density/pow(float(RefineBy), GridRank*level);
-			//while (ParticleCount > 1)
-			if(DM_rho>0.0)
-			{
-				if (SetupLoopCount > 0)
-				{
-					ParticleMass[npart] = DM_rho;
-					//ParticleMass[npart] = ParticleMeanDensity * pow(float(RefineBy), GridRank*level);
-					ParticleNumber[npart] = CollapseTestParticleCount++;
-					ParticleType[npart] = PARTICLE_TYPE_DARK_MATTER;
-					
-					/* Set random position within cell. */
-					
-					ParticlePosition[0][npart] = x +
-						CellWidth[0][0]*(float(rand())/float(RAND_MAX) - 0.5);
-					ParticlePosition[1][npart] = y +
-						CellWidth[1][0]*(float(rand())/float(RAND_MAX) - 0.5);
-					ParticlePosition[2][npart] = z +
-						CellWidth[2][0]*(float(rand())/float(RAND_MAX) - 0.5);
-					
-					/* Set bulk velocity. */
-					
-					for (sphere = 0; sphere<NumberOfSpheres;sphere++)
-					{
-						xdist = ParticlePosition[0][npart]-SpherePosition[sphere][0];
-						ydist = ParticlePosition[1][npart]-SpherePosition[sphere][1];
-						zdist = ParticlePosition[2][npart]-SpherePosition[sphere][2];
-						for (int dim = 0; dim < GridRank; dim++)
-							if (sqrt(xdist*xdist + ydist*ydist + zdist*zdist) < SphereRadius[sphere][0])
-							{ //particle is inside sphere
-								ParticleVelocity[dim][npart] = DMVelocity[dim]+UniformVelocity[dim]+SphereVelocity[sphere][dim] ;
-							}
-							else
-							{ //particle is outside sphere
-								ParticleVelocity[dim][npart] = DM_vel[dim]+UniformVelocity[dim];
-							}
-						}
-						/* Add random velocity; */
-						
-						if (DM_sigma != 0)
-							for (int dim = 0; dim < GridRank; dim++)
-								ParticleVelocity[dim][npart] += gasdev()*DM_sigma/VelocityUnits;
-						
-					}
-					npart++;
-					ParticleCount -= 1.0;
-				}
-			} // end: if statement
-			
+
 		} // end loop over grid
 	
 	for(int sphere=0;sphere<NumberOfSpheres;sphere++)
@@ -954,10 +964,10 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		Galaxy[sphere].free_data();
 	}
 	
-	} // end loop SetupLoopCount
 	
-	if (SphereUseParticles)
-		printf("CollapseTestInitialize: NumberOfParticles = %"ISYM"\n", NumberOfParticles);
+	
+	if (SphereUseParticles && ProcessorNumber == MyProcessorNumber)
+		printf("MHDGalaxyDisk: NumberOfParticles = %"ISYM"\n", NumberOfParticles);
 	
 	return SUCCESS;
 }
