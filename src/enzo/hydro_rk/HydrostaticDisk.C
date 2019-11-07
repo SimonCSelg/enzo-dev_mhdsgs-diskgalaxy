@@ -88,16 +88,52 @@ void hydrostatic_disk::rotation_curve()
 	for(int i=1; i<N_r; i++)
 	{
 		for(int j=0; j<N_z; j++)
-			if(equipart)
-				data[i][j].v_sqr = 
-					data[i][j].r/data[i][j].rho*(1.0+magn_fract)*pow(data[i][j].c_s, 2.0)*(data[i][j].rho - data[i-1][j].rho)/dr +
-					(data[i][j].phi - data[i-1][j].phi)/dr;
+		{
+			if (pressureGradientType == 0)
+			{       // S.C.S. (10/2019): This is what I first found 
+				// after taking over.
+				if(equipart)
+					data[i][j].v_sqr = 
+						data[i][j].r/data[i][j].rho * 
+						(1.0 + magn_fract) * 
+						pow(data[i][j].c_s, 2.0) * 
+						(data[i][j].rho - data[i-1][j].rho)/dr +
+						(data[i][j].phi - data[i-1][j].phi)/dr;
 					
-			else
-				data[i][j].v_sqr = 
-					data[i][j].r/data[i][j].rho*(pd_Emag_z(data[i][j].r, data[i][j].z) + 
-					                             pow(data[i][j].c_s, 2.0)*(data[i][j].rho - data[i-1][j].rho)/dr) +
-					(data[i][j].phi - data[i-1][j].phi)/dr;
+				else
+					data[i][j].v_sqr = 
+						data[i][j].r/data[i][j].rho * 
+						(pd_Emag_z(data[i][j].r, data[i][j].z) + 
+					        pow(data[i][j].c_s, 2.0) *
+						(data[i][j].rho - data[i-1][j].rho)/dr) +
+						(data[i][j].phi - data[i-1][j].phi)/dr;
+
+			} else if (pressureGradientType == 1)
+			{	// S.C.S. (08/2019): Rodenbeck & Schleicher 2016, Eq. 14
+				if (equipart)
+					data[i][j].v_sqr = -2.0 * 
+					(1.0 + magn_fract) * 
+					pow(data[i][j].c_s, 2.0) * 
+					data[i][j].r/r_sc;
+				else
+					data[i][j].v_sqr = 0.0;
+
+			} else if (pressureGradientType == 2)
+			{       // S.C.S. (08/2019): Wang+2010, Eq. 30
+				if (equipart)
+					data[i][j].v_sqr = data[i][0].r / 
+					data[i][0].rho * (1.0 + magn_fract) * 
+					pow(data[i][0].c_s, 2.0) * 
+					(data[i][0].rho - data[i-1][0].rho) /dr;
+				else
+					data[i][j].v_sqr = data[i][0].r /
+					data[i][0].rho * (pd_Emag_z(data[i][0].r,
+								data[i][0].z) +
+					pow(data[i][0].c_s, 2.0) * 
+					(data[i][0].rho - data[i-1][0].rho) / dr);
+			}
+		}
+
 	}
 }
 
