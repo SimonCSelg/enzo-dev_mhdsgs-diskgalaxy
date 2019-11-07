@@ -183,9 +183,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	if (ProcessorNumber != MyProcessorNumber)
 	{
-//		NumberOfParticles = (SphereUseParticles >0) ? 1 : 0;
-//		for (dim = 0; dim < GridRank; dim++)
-//			NumberOfParticles *= (GridEndIndex[dim] - GridStartIndex[dim] + 1);
 		return SUCCESS;
 	}
 	
@@ -235,8 +232,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	{		             		   // since the following 
 						   // refers to DM
 		int ParticleLoopCount = 0;
-//		if (NumberOfParticles > 0)
-//			this->DeleteParticles();
 		int npart = 0;
 		for (ParticleLoopCount = 0; ParticleLoopCount < 2; ParticleLoopCount++)
 		{
@@ -483,7 +478,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 																		/(SphereCoreRadius[sphere][0]*LengthUnits)
 																		/(SphereCoreRadius[sphere][1]*LengthUnits)
 																	)/LengthUnits;
-			//h_0[sphere]=VelocitySound[sphere]/sqrt(pi*MyGrav/2.0*RealSphereDensity[sphere]);
 			if((MyProcessorNumber == ROOT_PROCESSOR))
 				printf( "Natural scale height (kpc) =  %.2e\n",h_0[sphere]*LengthUnits/Mpc_cm*1.0e3);
 		}
@@ -499,9 +493,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					(MyGrav/DensityUnits/pow(TimeUnits,2))*(SphereDensity[sphere]*SolarMass)
 					/(2.0*pi*(sqrt(SphereCoreRadius[sphere][0]*SphereCoreRadius[sphere][1])*LengthUnits))
 					)/VelocityUnits;
-			// VelocityKep=sqrt(0.5*MyGrav*RealSphereDensity[sphere]*SphereCoreRadius[sphere][1]*SphereCoreRadius[sphere][2])
-			// /((double)TimeUnits/LengthUnits*VelocityUnits);
-			
+		
 			if((MyProcessorNumber == ROOT_PROCESSOR))
 				printf(	"\nGalaxy Mass (M_sun) = %.2e\n",	SphereDensity[sphere]);
 		}
@@ -678,18 +670,14 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			r = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
 			rcyl = sqrt(xpos*xpos +ypos*ypos);
 			r = fmax(r, 0.01*CellWidth[0][0]);
-			//rcyl = max(rcyl, 0.1*CellWidth[0][0]);
 			
 			double rn = sqrt(xposn*xposn + yposn*yposn + zposn*zposn);
 			double rcyln = sqrt(xposn*xposn +yposn*yposn);
 			rn = fmax(rn, 0.01*CellWidth[0][0]);
-			//rcyln = max(rcyln, 0.1*CellWidth[0][0]);
 						
 			/* Compute Cartesian coordinates for rotational properties */
 			
-			//outer_radius = (SphereSmoothSurface[sphere] == TRUE) ? 
-			//SphereSmoothRadius[sphere]*SphereRadius[sphere][0] : SphereRadius[sphere][0];
-			
+		
 			outer_radius =	 pow(xposn/SphereRadius[sphere][0],2)
 							+pow(yposn/SphereRadius[sphere][1],2)
 							+pow(zposn/SphereRadius[sphere][2],2);
@@ -735,12 +723,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			{
 				case 3:
 					{
-					//sc_h=pow(VelocitySound[sphere],2)
-					//			/(pi*MyGrav/2.0*SphereDensity[sphere]*SphereCoreRadius[sphere][2])
-					//			*exp(rcyln);
 					sc_h=h_0[sphere]*exp(rcyln);
-					//density=RealSphereDensity[sphere]/exp(2.0*rcyln)/pow(cosh(zpos/sc_h),2);
-					
+										
 					
 					double den=Galaxy[sphere].intpl_rho(rcyl*LengthUnits, fabs(zpos)*LengthUnits)/DensityUnits;
 					
@@ -751,7 +735,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 						appl_grid=false;
 						density=0.0;
 					}
-					//density=SphereDensity[sphere]*exp(-rcyln)*exp(-abs(zposn));
 					break;
 					}	
 				case 4:
@@ -770,7 +753,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 				RotVelocity[1]=SphereAngularMomentum[sphere][2]*xpos_rs-SphereAngularMomentum[sphere][0]*zpos_rs;
 				RotVelocity[2]=SphereAngularMomentum[sphere][0]*ypos_rs-SphereAngularMomentum[sphere][1]*xpos_rs;
 				
-				//double r_2=sqrt(xpos_rs*xpos_rs+ypos_rs*ypos_rs+zpos_rs*zpos_rs);
 				double r_2=sqrt(RotVelocity[0]*RotVelocity[0]+RotVelocity[1]*RotVelocity[1]+RotVelocity[2]*RotVelocity[2]);
 				
 				if(r_2>0.1*CellWidth[0][0])
@@ -798,10 +780,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			
 			if(SphereType[sphere]==3)
 			{
-				r_f=1.0/SphereRotationalPeriod[sphere]*0.5*r_test_n*sqrt(BESSI0(0.5*r_test_n)*BESSK0(0.5*r_test_n)-BESSI1(0.5*r_test_n)*BESSK1(0.5*r_test_n));
-				//s_p=-2.0*r_test_n*exp(-2.0*r_test_n)*pow(VelocitySound[sphere]*SphereFracKeplerianRot[sphere],2);
-				//s_p=-2.0*r_test_n*pow(VelocitySound[sphere]*SphereFracKeplerianRot[sphere],2);
-				
+				r_f=1.0/SphereRotationalPeriod[sphere]*0.5*r_test_n*sqrt(BESSI0(0.5*r_test_n)*BESSK0(0.5*r_test_n)-BESSI1(0.5*r_test_n)*BESSK1(0.5*r_test_n));				
 				if(appl_grid)
 					s_p = Galaxy[sphere].intpl_v_sqr(rcyl*LengthUnits, fabs(zpos)*LengthUnits)*pow(SphereFracKeplerianRot[sphere],2) /
 					      (VelocityUnits*VelocityUnits);
@@ -837,8 +816,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 						MagnField[dim]=sqrt(2.0*SphereMagnFactor[sphere]*density)*VelocitySound[sphere]*RotVelocity[dim];
 					else
 						MagnField[dim]=MagnConversionFactor*Galaxy[sphere].B(rcyl*LengthUnits, fabs(zpos)*LengthUnits)*RotVelocity[dim];
-					//MagnField[dim]=SphereMagnFactor[sphere]*RotVelocity[dim]*rcyln/exp(2.0*rcyln)/pow(cosh(zpos/sc_h),2);
-					//MagnField[dim]+=0.001*Maxwellian(VelocitySound[sphere], VelocityUnits, mu, Gamma);
+	
 				}
 				m = 0;
 			}
@@ -864,11 +842,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					temperature = SphereTemperature[sphere] / (fmax(density,InitialDensity)/RealSphereDensity[sphere]);
 					break;
 	   		}
-			//temperature = SphereTemperature[sphere] * pow(density/SphereDensity[sphere],Gamma-1.0);
-			//temperature = SphereTemperature[sphere] / (density/SphereDensity[sphere]);
-			
+		
 			metallicity += SphereMetallicity[sphere];
-			//density=max(InitialDensity,SphereDensity[sphere]*exp(-0.5*pow(rn,2)));
 		} // end: if (r < SphereRadius)
 	} // end: loop over spheres
 	
@@ -885,23 +860,14 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		density=InitialDensity;
 	}
 	
-	//temperature = InitialTemperature;
 	
 	
 	for(int dim=0;dim<MAX_DIMENSION;dim++)
 	{
 		MagnField[dim]+=MagnConversionFactor*InitialMagnField*gasdev();//1.0e-30;
-		//MagnField[dim]=0.0;
 	}
 	
-	//double c_sound = 	sqrt((temperature * Gamma * kboltz) / 
-	//					(mu * mh)) / VelocityUnits;
-	
-	//Velocity[0] += Maxwellian(c_sound, VelocityUnits, mu, Gamma);
-	//Velocity[1] += Maxwellian(c_sound, VelocityUnits, mu, Gamma);
-	//Velocity[2] += Maxwellian(c_sound, VelocityUnits, mu, Gamma);
-	
-	
+
 	/* Set density. */
 	
 	BaryonField[0][n] = density*BaryonMeanDensity;
@@ -914,7 +880,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		CoolData.HydrogenFractionByMass * BaryonField[0][n] *
 			sqrt(OmegaMatterNow)/
 			(OmegaMatterNow*BaryonMeanDensity*HubbleConstantNow);
-		//(CosmologySimulationOmegaBaryonNow*HubbleConstantNow);
 		
 		BaryonField[HeIINum][n] = CosmologySimulationInitialFractionHeII*
 			BaryonField[0][n] * 4.0 * (1.0-CoolData.HydrogenFractionByMass);
@@ -933,7 +898,6 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 				BaryonField[0][n]*CoolData.HydrogenFractionByMass*pow(301.0,5.1)*
 				pow(OmegaMatterNow, float(1.5))/
 				(OmegaMatterNow*BaryonMeanDensity)/
-				//CosmologySimulationOmegaBaryonNow/
 			HubbleConstantNow*2.0;
 		}
 		
