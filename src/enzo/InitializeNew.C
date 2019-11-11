@@ -10,6 +10,8 @@
 /  date:       May, 2008
 /  modified3:  Alexei Kritsuk
 /  date:       May, 2008
+/  modified4:  Simon Selg
+/  date:       November, 2019
 /
 /  PURPOSE:
 /
@@ -223,8 +225,10 @@ int MHDDecayingRandomFieldInitialize(FILE *fptr, FILE *Outfptr,
 			    HierarchyEntry &TopGrid, TopGridData &MetaData, int SetBaryonFields);
 int GalaxyDiskInitialize(FILE *fptr, FILE *Outfptr, 
 			 HierarchyEntry &TopGrid, TopGridData &MetaData);
+// S. Selg (11/2019): Updating the prototype due to prgio implementation
 int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
-			    HierarchyEntry &TopGrid, TopGridData &MetaData);
+			    HierarchyEntry &TopGrid, TopGridData &MetaData,
+			    int SetBaryonFields);
 int AGNDiskInitialize(FILE *fptr, FILE *Outfptr, 
 		      HierarchyEntry &TopGrid, TopGridData &MetaData);
 int FreeExpansionInitialize(FILE *fptr, FILE *Outfptr, HierarchyEntry &TopGrid,
@@ -680,9 +684,16 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
     ret = MHDDecayingRandomFieldInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
   }
 
-  // MHD Disk Galaxies
+  // MHD Disk Galaxies: Update (11/2019, S. Selg): PRGIO
   if (ProblemType == 217) {
-	  ret = MHDGalaxyDiskInitialize(fptr, Outfptr, TopGrid, MetaData);
+	  if (ParallelRootGridIO == TRUE) {
+		  ret = MHDGalaxyDiskInitialize(fptr, Outfptr, TopGrid, MetaData,
+				  0);
+	  } else {
+		  ret = MHDGalaxyDiskInitialize(fptr, Outfptr, TopGrid, MetaData,
+				  1);
+	  }
+
   }
 
   // 250 ) Cosmic Ray Shocktube Problem
@@ -1037,6 +1048,15 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
 	== FAIL) {
       ENZO_FAIL("Error in MHDDecayingRandomField ReInitialize.\n");
     }
+
+  // S. Selg (09/2019)
+  // For ProblemType 2017 MHDGalaxy Disk we only initialize the data
+  // once the topgrid has been split, if we use PRGIO
+  if (ParallelRootGridIO == true && ProblemType == 217)
+	  if (MHDGalaxyDiskInitialize(fptr, Outfptr, TopGrid, MetaData, 1)
+			  == FAIL) {
+		  ENZO_FAIL("Error in MHDGalaxyDiskReInitialize.\n");
+	  }
 
   CommunicationBarrier();
  
