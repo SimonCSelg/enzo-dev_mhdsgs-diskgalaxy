@@ -5,7 +5,7 @@
 /  written by: Greg Bryan
 /  date:       May, 1998
 /  modified1:  Simon Selg
-/  date1:      08/2019
+/  date1:      11/2019
 /
 /  PURPOSE:
 /    Set up a number of spherical objects
@@ -36,8 +36,14 @@ void AddLevel(LevelHierarchyEntry *Array[], HierarchyEntry *Grid, int level);
 int RebuildHierarchy(TopGridData *MetaData,
 		     LevelHierarchyEntry *LevelArray[], int level);
 
+// ============================================================================
+// S. Selg (11/2019): Adjustments in order to use PRGIO. Mind that there is a
+// discrimination between the states of ``SetBaryonFiels``.
+// ----------------------------------------------------------------------------
+
 int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr, 
-			  HierarchyEntry &TopGrid, TopGridData &MetaData
+			  HierarchyEntry &TopGrid, TopGridData &MetaData,
+			  int SetBaryonFields
 		)
 {
   const char *DensName = "Density";
@@ -281,44 +287,61 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 
   /* set up grid */
 
-  if (TopGrid.GridData->MHDGalaxyDiskInitializeGrid(
-			MHDGalaxyDiskNumberOfSpheres,
-			MHDGalaxyDiskRadius,
-			MHDGalaxyDiskAngularMomentum,
-			MHDGalaxyDiskCoreRadius,
-			MHDGalaxyDiskDensity,
-			MHDGalaxyDiskTemperature,
-			MHDGalaxyDiskMetallicity,
-			MHDGalaxyDiskPosition,
-			MHDGalaxyDiskVelocity,
-			MHDGalaxyDiskFracKeplerianRot,
-			MHDGalaxyDiskTurbulence,
-			MHDGalaxyDiskDispersion,
-			MHDGalaxyDiskCutOff,
-			MHDGalaxyDiskAng1,
-			MHDGalaxyDiskAng2,
-			MHDGalaxyDiskNumShells,
-			MHDGalaxyDiskType,
-			MHDGalaxyDiskConstantPressure,
-			MHDGalaxyDiskSmoothSurface,
-			MHDGalaxyDiskSmoothRadius,
-			MHDGalaxyDiskMagnFactor,
-			MHDGalaxyDiskMagnEquipart,
-			MHDGalaxyDiskHaloMass,
-			MHDGalaxyDiskHaloCoreRadius,
-			MHDGalaxyDiskHaloRadius,
-			MHDGalaxyDiskUseParticles,
-			MHDGalaxyDiskParticleMeanDensity,
-			MHDGalaxyDiskUniformVelocity,
-			MHDGalaxyDiskUseColour,
-			MHDGalaxyDiskUseMetals,
-			MHDGalaxyDiskInitialTemperature,
-			MHDGalaxyDiskInitialDensity,
-			MHDGalaxyDiskInitialMagnField,
-		        MHDGalaxyDiskPressureGradientType,	
-			0) == FAIL) {
-    ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
+  /* =========================================================================
+   * S. Selg (11/2019): Implementation of Parallel Root Grid IO (PRGIO)
+   * =========================================================================
+   */
+
+  HierarchyEntry *CurrentGrid;
+  CurrentGrid = &TopGrid;
+  while (CurrentGrid != NULL) {
+  	if (CurrentGrid->GridData->MHDGalaxyDiskInitializeGrid(
+					MHDGalaxyDiskNumberOfSpheres,
+					MHDGalaxyDiskRadius,
+					MHDGalaxyDiskAngularMomentum,
+					MHDGalaxyDiskCoreRadius,
+					MHDGalaxyDiskDensity,
+					MHDGalaxyDiskTemperature,
+					MHDGalaxyDiskMetallicity,
+					MHDGalaxyDiskPosition,
+					MHDGalaxyDiskVelocity,
+					MHDGalaxyDiskFracKeplerianRot,
+					MHDGalaxyDiskTurbulence,
+					MHDGalaxyDiskDispersion,
+					MHDGalaxyDiskCutOff,
+					MHDGalaxyDiskAng1,
+					MHDGalaxyDiskAng2,
+					MHDGalaxyDiskNumShells,
+					MHDGalaxyDiskType,
+					MHDGalaxyDiskConstantPressure,
+					MHDGalaxyDiskSmoothSurface,
+					MHDGalaxyDiskSmoothRadius,
+					MHDGalaxyDiskMagnFactor,
+					MHDGalaxyDiskMagnEquipart,
+					MHDGalaxyDiskHaloMass,
+					MHDGalaxyDiskHaloCoreRadius,
+					MHDGalaxyDiskHaloRadius,
+					MHDGalaxyDiskUseParticles,
+					MHDGalaxyDiskParticleMeanDensity,
+					MHDGalaxyDiskUniformVelocity,
+					MHDGalaxyDiskUseColour,
+					MHDGalaxyDiskUseMetals,
+					MHDGalaxyDiskInitialTemperature,
+					MHDGalaxyDiskInitialDensity,
+					MHDGalaxyDiskInitialMagnField,
+		        		MHDGalaxyDiskPressureGradientType,	
+					0,
+					SetBaryonFields,
+					1) == FAIL) {
+    			ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
+  			}
+	CurrentGrid = CurrentGrid->NextGridThisLevel;
   }
+
+  /* S. Selg (11/2019): This will be done after first initialization! (if you are
+   * using prgio. */
+
+  if (SetBaryonFields) {
 
   /* Convert minimum initial overdensity for refinement to mass
      (unless MinimumMass itself was actually set). */
@@ -388,7 +411,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 				MHDGalaxyDiskInitialDensity,
 				MHDGalaxyDiskInitialMagnField,
 				MHDGalaxyDiskPressureGradientType,
-				level+1) == FAIL) 
+				level,   // S. Selg (11/2019, used to be level+1)
+				SetBaryonFields,
+				0) == FAIL) 
 				{
 					fprintf(stderr, "Error in MHDGalaxyDiskInitializeGrid.\n");
 					return FAIL;
@@ -403,7 +428,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 		  LevelHierarchyEntry *Temp = LevelArray[level];
 		  while (Temp != NULL)
 		  {
-			  if (Temp->GridData->ProjectSolutionToParentGrid(*Temp->GridHierarchyEntry->ParentGrid->GridData) == FAIL) 
+	//		  if (Temp->GridData->ProjectSolutionToParentGrid(*Temp->GridHierarchyEntry->ParentGrid->GridData) == FAIL) 
+			  if (Temp->GridData->ProjectSolutionToParentGrid(
+				*LevelArray[level-1]->GridData) == FAIL)		  
 			  {
 				  fprintf(stderr, "Error in grid->ProjectSolutionToParentGrid.\n");
 				  return FAIL;
@@ -728,7 +755,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 	      MHDGalaxyDiskSmoothRadius[sphere]);
     }
   }
-
+  } // endif SetBaryonFields
   return SUCCESS;
 
 }

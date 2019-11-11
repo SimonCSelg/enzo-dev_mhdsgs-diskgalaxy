@@ -6,7 +6,7 @@
 /  written by: Kai Rodenbeck (based on code by Greg Bryan)
 /  date:       2015
 /  modified1:  Wolfram Schmidt, 2018
-/
+/  modified2:  Simon Selg, 2019
 /  PURPOSE:
 /    Set up a number of spheres with disk galaxies and magnetic fields
 /
@@ -115,7 +115,9 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					float InitialDensity,
 					float InitialMagnField,
 					int PressureGradientType[MAX_SPHERES],
-					int level)
+					int level,
+					int SetBaryonFields,
+					int partitioned)
 {
 	/* declarations */
 	
@@ -185,6 +187,14 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	{
 		return SUCCESS;
 	}
+
+	/*====================================================================
+	 * S. Selg (09/2019): Part of Parallel Root Grid IO. The initializer is
+	 * called twice. In its first call, the grid initializer does (almost)
+	 * nothing.
+	 *===================================================================*/
+	if (SetBaryonFields == 0)
+			      return SUCCESS;
 	
 	float	DensityUnits,
 			LengthUnits,
@@ -228,7 +238,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	 * STAGE I: Get the number of particles in order to allocate memory.
 	 */
 
-	if (SphereUseParticles == 1 && level == 0) // > 1 would not be specific 
+	if (SphereUseParticles == 1 && level == 0 && partitioned == 1) // > 1 would not be specific 
 	{		             		   // since the following 
 						   // refers to DM
 		int ParticleLoopCount = 0;
