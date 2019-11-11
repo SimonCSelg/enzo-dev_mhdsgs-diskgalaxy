@@ -1052,7 +1052,7 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
   // S. Selg (09/2019)
   // For ProblemType 2017 MHDGalaxy Disk we only initialize the data
   // once the topgrid has been split, if we use PRGIO
-  if (ParallelRootGridIO == True && ProblemType == 217)
+  if (ParallelRootGridIO == true && ProblemType == 217)
 	  if (MHDGalaxyDiskInitialize(fptr, Outfptr, TopGrid, MetaData, 1)
 			  == FAIL) {
 		  ENZO_FAIL("Error in MHDGalaxyDiskReInitialize.\n");

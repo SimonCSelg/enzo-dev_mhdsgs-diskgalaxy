@@ -116,7 +116,8 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					float InitialMagnField,
 					int PressureGradientType[MAX_SPHERES],
 					int level,
-					int SetBaryonFields)
+					int SetBaryonFields,
+					int partitioned)
 {
 	/* declarations */
 	
@@ -237,7 +238,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	 * STAGE I: Get the number of particles in order to allocate memory.
 	 */
 
-	if (SphereUseParticles == 1 && level == 0) // > 1 would not be specific 
+	if (SphereUseParticles == 1 && level == 0 && partitioned == 1) // > 1 would not be specific 
 	{		             		   // since the following 
 						   // refers to DM
 		int ParticleLoopCount = 0;

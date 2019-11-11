@@ -3126,7 +3126,8 @@ int zEulerSweep(int j, int NumberOfSubgrids, fluxes *SubgridFluxes[],
 				  float InitialMagnField,
 				  int   PressureGradientType[MAX_SPHERES],
 				  int   level,
-				  int   SetBaryonFields);
+				  int   SetBaryonFields,
+				  int   partitioned);
 
   int AGNDiskInitializeGrid(float BlackHoleMass,
 			    int BlackHoleType,

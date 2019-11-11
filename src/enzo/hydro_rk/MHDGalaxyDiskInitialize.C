@@ -295,43 +295,44 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
   HierarchyEntry *CurrentGrid;
   CurrentGrid = &TopGrid;
   while (CurrentGrid != NULL) {
-  	if (TopGrid.GridData->MHDGalaxyDiskInitializeGrid(
-			MHDGalaxyDiskNumberOfSpheres,
-			MHDGalaxyDiskRadius,
-			MHDGalaxyDiskAngularMomentum,
-			MHDGalaxyDiskCoreRadius,
-			MHDGalaxyDiskDensity,
-			MHDGalaxyDiskTemperature,
-			MHDGalaxyDiskMetallicity,
-			MHDGalaxyDiskPosition,
-			MHDGalaxyDiskVelocity,
-			MHDGalaxyDiskFracKeplerianRot,
-			MHDGalaxyDiskTurbulence,
-			MHDGalaxyDiskDispersion,
-			MHDGalaxyDiskCutOff,
-			MHDGalaxyDiskAng1,
-			MHDGalaxyDiskAng2,
-			MHDGalaxyDiskNumShells,
-			MHDGalaxyDiskType,
-			MHDGalaxyDiskConstantPressure,
-			MHDGalaxyDiskSmoothSurface,
-			MHDGalaxyDiskSmoothRadius,
-			MHDGalaxyDiskMagnFactor,
-			MHDGalaxyDiskMagnEquipart,
-			MHDGalaxyDiskHaloMass,
-			MHDGalaxyDiskHaloCoreRadius,
-			MHDGalaxyDiskHaloRadius,
-			MHDGalaxyDiskUseParticles,
-			MHDGalaxyDiskParticleMeanDensity,
-			MHDGalaxyDiskUniformVelocity,
-			MHDGalaxyDiskUseColour,
-			MHDGalaxyDiskUseMetals,
-			MHDGalaxyDiskInitialTemperature,
-			MHDGalaxyDiskInitialDensity,
-			MHDGalaxyDiskInitialMagnField,
-		        MHDGalaxyDiskPressureGradientType,	
-			0,
-			SetBaryonFields) == FAIL) {
+  	if (CurrentGrid->GridData->MHDGalaxyDiskInitializeGrid(
+					MHDGalaxyDiskNumberOfSpheres,
+					MHDGalaxyDiskRadius,
+					MHDGalaxyDiskAngularMomentum,
+					MHDGalaxyDiskCoreRadius,
+					MHDGalaxyDiskDensity,
+					MHDGalaxyDiskTemperature,
+					MHDGalaxyDiskMetallicity,
+					MHDGalaxyDiskPosition,
+					MHDGalaxyDiskVelocity,
+					MHDGalaxyDiskFracKeplerianRot,
+					MHDGalaxyDiskTurbulence,
+					MHDGalaxyDiskDispersion,
+					MHDGalaxyDiskCutOff,
+					MHDGalaxyDiskAng1,
+					MHDGalaxyDiskAng2,
+					MHDGalaxyDiskNumShells,
+					MHDGalaxyDiskType,
+					MHDGalaxyDiskConstantPressure,
+					MHDGalaxyDiskSmoothSurface,
+					MHDGalaxyDiskSmoothRadius,
+					MHDGalaxyDiskMagnFactor,
+					MHDGalaxyDiskMagnEquipart,
+					MHDGalaxyDiskHaloMass,
+					MHDGalaxyDiskHaloCoreRadius,
+					MHDGalaxyDiskHaloRadius,
+					MHDGalaxyDiskUseParticles,
+					MHDGalaxyDiskParticleMeanDensity,
+					MHDGalaxyDiskUniformVelocity,
+					MHDGalaxyDiskUseColour,
+					MHDGalaxyDiskUseMetals,
+					MHDGalaxyDiskInitialTemperature,
+					MHDGalaxyDiskInitialDensity,
+					MHDGalaxyDiskInitialMagnField,
+		        		MHDGalaxyDiskPressureGradientType,	
+					0,
+					SetBaryonFields,
+					0) == FAIL) {
     			ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
   			}
 	CurrentGrid = CurrentGrid->NextGridThisLevel;
@@ -410,8 +411,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 				MHDGalaxyDiskInitialDensity,
 				MHDGalaxyDiskInitialMagnField,
 				MHDGalaxyDiskPressureGradientType,
-				level+1,
-				SetBaryonFields) == FAIL) 
+				level,   // S. Selg (11/2019, used to be level+1)
+				SetBaryonFields,
+				1) == FAIL) 
 				{
 					fprintf(stderr, "Error in MHDGalaxyDiskInitializeGrid.\n");
 					return FAIL;
@@ -426,7 +428,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 		  LevelHierarchyEntry *Temp = LevelArray[level];
 		  while (Temp != NULL)
 		  {
-			  if (Temp->GridData->ProjectSolutionToParentGrid(*Temp->GridHierarchyEntry->ParentGrid->GridData) == FAIL) 
+	//		  if (Temp->GridData->ProjectSolutionToParentGrid(*Temp->GridHierarchyEntry->ParentGrid->GridData) == FAIL) 
+			  if (Temp->GridData->ProjectSolutionToParentGrid(
+				*LevelArray[level-1]->GridData) == FAIL)		  
 			  {
 				  fprintf(stderr, "Error in grid->ProjectSolutionToParentGrid.\n");
 				  return FAIL;
