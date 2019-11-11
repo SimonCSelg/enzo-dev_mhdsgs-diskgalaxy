@@ -332,7 +332,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 		        		MHDGalaxyDiskPressureGradientType,	
 					0,
 					SetBaryonFields,
-					0) == FAIL) {
+					1) == FAIL) {
     			ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
   			}
 	CurrentGrid = CurrentGrid->NextGridThisLevel;
@@ -413,7 +413,7 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 				MHDGalaxyDiskPressureGradientType,
 				level,   // S. Selg (11/2019, used to be level+1)
 				SetBaryonFields,
-				1) == FAIL) 
+				0) == FAIL) 
 				{
 					fprintf(stderr, "Error in MHDGalaxyDiskInitializeGrid.\n");
 					return FAIL;
