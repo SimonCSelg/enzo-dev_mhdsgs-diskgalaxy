@@ -283,7 +283,10 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			{
 				// WE READ THE PARTICLE ICs FROM FILE
 				std::ifstream particle_file;
-				particle_file.open("particle_ic");
+				if (sphere == 0)
+					particle_file.open("particle_ic");
+				else if (sphere == 1)
+					particle_file.open("particle_ic_b");
 
 				if (particle_file.is_open())
 				{
