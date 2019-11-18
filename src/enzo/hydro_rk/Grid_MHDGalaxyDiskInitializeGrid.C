@@ -283,8 +283,15 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			{
 				// WE READ THE PARTICLE ICs FROM FILE
 				std::ifstream particle_file;
-				particle_file.open("particle_ic");
-
+				if (sphere == 0)
+					particle_file.open("particle_ic_a");
+				else if (sphere == 1)
+					particle_file.open("particle_ic_b");
+				else
+				{
+					fprintf(stderr,"Error in MHDGalaxyDiskInitializeGrid: halo %"ISYM" cannot be initialized. Missing file!\n", sphere);
+					return FAIL;
+				}
 				if (particle_file.is_open())
 				{
 					std::string line;
@@ -337,7 +344,10 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 								      // line
 					} // CLOSING WHILE	
 				
-				} // CLOSING IF
+				} else {
+					fprintf(stderr, "Error in MHDGalaxyDiskInializeGrid. File for halo no. %"ISYM" not found.\n", sphere);
+					return FAIL;
+				}// CLOSING IF file is open
 				particle_file.close();
 			} // CLOSING FOR spheres
 		} // CLOSING FOR ParticleCountLoop
