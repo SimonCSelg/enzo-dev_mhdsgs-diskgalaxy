@@ -27,7 +27,7 @@ private:
 	int pressureGradientType; // S.Selg; see Wang+2010, Eq. 30
 	int N_r, N_z;
 
-	static const double eight_pi = 8.0*pi;
+	static constexpr double eight_pi = 8.0*pi;
 
 	double dr, dz;
 	double r_sc,z_sc;
