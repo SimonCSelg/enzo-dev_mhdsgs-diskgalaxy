@@ -27,8 +27,9 @@ private:
 	int pressureGradientType; // S.Selg; see Wang+2010, Eq. 30
 	int N_r, N_z;
 
-	static const double eight_pi = 8.0*pi;
-
+	//static constexpr double eight_pi = 8.0*pi;
+        static double eight_pi()
+		{ return 8.0*pi; }
 	double dr, dz;
 	double r_sc,z_sc;
 	double sigma;
@@ -243,17 +244,17 @@ public:
 
 	double Emag(double r, double z)
 	{
-		return pow(B(r, z), 2.0)/eight_pi;
+		return pow(B(r, z), 2.0)/eight_pi();
 	}
 
 	double pd_Emag_r(double r, double z)
 	{
-		return 2.0*B(r, z)*pd_B_r(r, z)/eight_pi;
+		return 2.0*B(r, z)*pd_B_r(r, z)/eight_pi();
 	}
 
 	double pd_Emag_z(double r, double z)
 	{
-		return 2.0*B(r, z)*pd_B_z(r, z)/eight_pi;
+		return 2.0*B(r, z)*pd_B_z(r, z)/eight_pi();
 	}
 
 private:
