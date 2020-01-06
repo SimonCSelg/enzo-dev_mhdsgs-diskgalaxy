@@ -1,12 +1,14 @@
 #=======================================================================
 #
-# FILE:        Make.mach.linux-gnu
+# FILE:        Make.mach.hlrn-emmy
 #
-# DESCRIPTION: Makefile settings for a linux machine
+# DESCRIPTION: Makefile settings for the HLRN IV site in Goettingen (Emmy)
 #
 # AUTHOR:      Rick Wagner (rick@ucsd.edu)
+# AUTHOR, mod: Simon Selg
 #
 # DATE:        2008-09-16 (updated 2019-09-11)
+# Date, mod:   2020-01-06
 #
 # Depending on your linux distribution several packages need to be installed
 # to satisfy the minimum Enzo requirements (GNU compiler suite with
@@ -25,7 +27,7 @@
 #
 #=======================================================================
 
-MACH_TEXT  = Generic GNU/Linux machine file. Requires gfortran/gcc/g++, OpenMPI, and a \
+MACH_TEXT  = HLRN IV (Emmy) machine file. Requires gfortran/gcc/g++, OpenMPI, and a \
 serial HDF5 library. Make sure to set the correct LOCAL_HDF5_INSTALL path in the \
 machine file (e.g., /usr for a system-wide installation or a custom path for local \
 installations).
