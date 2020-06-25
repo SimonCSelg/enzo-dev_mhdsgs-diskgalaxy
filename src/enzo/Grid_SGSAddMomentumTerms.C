@@ -47,7 +47,12 @@ void grid::SGS_AddMom_nonlinear_kinetic(float **Tau) {
   int B1Num, B2Num, B3Num, PhiNum;
   this->IdentifyPhysicalQuantities(DensNum, GENum, Vel1Num, Vel2Num, Vel3Num,
       TENum, B1Num, B2Num, B3Num, PhiNum);
-
+   // S. Selg (06/2020)
+  int SGSKinEnNum, SGSMagEnNum;
+  if (SGSTrackInstantaneousSGSEnergies)
+	  this->IdentifySGSFields(SGSKinEnNum, SGSMagEnNum);
+  // ===
+  
   float* rho;
   // if an explicit filter should be used
   // (at this point the fields are already filtered, 
@@ -94,7 +99,10 @@ void grid::SGS_AddMom_nonlinear_kinetic(float **Tau) {
           Tau[SGSYZ][igrid] += CDeltaSqr * rho[igrid] * JacVel[SGSY][l][igrid] * JacVel[SGSZ][l][igrid];
           Tau[SGSXZ][igrid] += CDeltaSqr * rho[igrid] * JacVel[SGSX][l][igrid] * JacVel[SGSZ][l][igrid];
         }
-
+	// S. Selg (06/2020)
+	if (SGSTrackInstantaneousSGSEnergies)
+		BaryonField[SGSKinEnNum][igrid] = 0.5 * (Tau[SGSXX][igrid] + Tau[SGSYY][igrid] + Tau[SGSZZ][igrid]);
+	// ---
       }
 
 }
@@ -199,7 +207,11 @@ void grid::SGS_AddMom_nonlinear_kinetic_scaled(float **Tau) {
 void grid::SGS_AddMom_nonliner_magnetic(float **Tau) {
   if (debug1)
     printf("[%"ISYM"] grid::SGS_AddMom_nonliner_magnetic start\n",MyProcessorNumber);
-
+  // S. Selg: (06/2020)
+  int SGSKinEnNum, SGSMagEnNum;
+  if (SGSTrackInstantaneousSGSEnergies)
+	  this->IdentifySGSFields(SGSKinEnNum, SGSMagEnNum);
+  // ==
   int size = 1;
   int StartIndex[MAX_DIMENSION];
   int EndIndex[MAX_DIMENSION];
@@ -242,7 +254,10 @@ void grid::SGS_AddMom_nonliner_magnetic(float **Tau) {
           Tau[SGSYZ][igrid] -= CDeltaSqr * JacB[SGSY][l][igrid] * JacB[SGSZ][l][igrid];
           Tau[SGSXZ][igrid] -= CDeltaSqr * JacB[SGSX][l][igrid] * JacB[SGSZ][l][igrid];
         }
-
+	// S. Selg (06/2019)
+	if (SGSTrackInstantaneousSGSEnergies)
+		BaryonField[SGSMagEnNum][igrid] = 0.5 * CDeltaSqr * turbMagPres;
+	// ==
         // the turbulent magnetic pressure component
         Tau[SGSXX][igrid] += CDeltaSqr * turbMagPres/2.;
         Tau[SGSYY][igrid] += CDeltaSqr * turbMagPres/2.;

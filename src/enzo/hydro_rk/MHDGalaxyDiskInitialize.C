@@ -5,7 +5,7 @@
 /  written by: Greg Bryan
 /  date:       May, 1998
 /  modified1:  Simon Selg
-/  date1:      11/2019
+/  date1:      06/2020
 /
 /  PURPOSE:
 /    Set up a number of spherical objects
@@ -74,7 +74,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
   const char *DIIName   = "DII_Density";
   const char *HDIName   = "HDI_Density";
   const char *MetalName = "Metal_Density";
-
+  // S. Selg (06/2020): MHD-SGS
+  char *SGSKinEnName = "SGSKinEn";
+  char *SGSMagEnName = "SGSMagEn";
   /* declarations */
 
   char  line[MAX_LINE_LENGTH];
@@ -688,6 +690,12 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
   // S. Selg (08/2019): toggle output of gravitational potential
   if (WritePotential)
 	  DataLabel[count++] = (char*) GPotName;
+
+  // S. Selg (06/2020): 
+  if (UseSGSModel && SGSTrackInstantaneousSGSEnergies) {
+	  DataLabel[count++] = SGSKinEnName;
+	  DataLabel[count++] = SGSMagEnName;
+  }
 
   for (i = 0; i < count; i++)
     DataUnits[i] = NULL;

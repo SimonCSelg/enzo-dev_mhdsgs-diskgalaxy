@@ -391,6 +391,7 @@ EXTERN int UseSGSModel;
 EXTERN int SGSFilterStencil;
 EXTERN int SGSNeedJacobians;
 EXTERN int SGSNeedMixedFilteredQuantities;
+EXTERN int SGSTrackInstantaneousSGSEnergies;  // S. Selg (06/2020)
 EXTERN float SGSFilterWidth;
 EXTERN float SGSFilterWeights[4];
 EXTERN float SGScoeffERS2M2Star;

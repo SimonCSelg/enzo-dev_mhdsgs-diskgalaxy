@@ -442,6 +442,9 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   SGSFilterStencil = 0; // the one-dimensional stencil of the complete filter 
   SGSNeedJacobians = 0; // set automatically in ReadParameter file 
   SGSNeedMixedFilteredQuantities = 0; // set automatically in ReadParameter file
+  // S. Selg (06/2020): disables two additional BaryonFields for kinetic and 
+  // magnetic SGS energies
+  SGSTrackInstantaneousSGSEnergies = 0;
   SGSFilterWidth = 0.; // off, i.e. use grid-scale quantities
   for (i = 0; i < 4; i++)
     // discrete filter weights of explicit filter

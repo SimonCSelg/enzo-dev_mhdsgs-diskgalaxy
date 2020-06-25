@@ -179,7 +179,11 @@ const field_type
   ImPsi = 102,
   FDMDensity = 103,
 
-  FieldUndefined  = 104;
+  /* SGS energies */
+  SGSKinEn = 104,
+  SGSMagEn = 105,
+
+  FieldUndefined  = 106;
 
 /*
 enum field_type {Density, TotalEnergy, InternalEnergy, Pressure,

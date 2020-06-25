@@ -6,7 +6,7 @@
 /  written by: Kai Rodenbeck (based on code by Greg Bryan)
 /  date:       2015
 /  modified1:  Wolfram Schmidt, 2018
-/  modified2:  Simon Selg, 2019
+/  modified2:  Simon Selg, 2020
 /  PURPOSE:
 /    Set up a number of spheres with disk galaxies and magnetic fields
 /
@@ -181,6 +181,11 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	if (WritePotential)
 		FieldType[NumberOfBaryonFields++] = GravPotential;
 
+	// S. Selg (06/2020): MHD-SGS
+	if (UseSGSModel && SGSTrackInstantaneousSGSEnergies) {
+		FieldType[NumberOfBaryonFields++] = SGSKinEn;
+		FieldType[NumberOfBaryonFields++] = SGSMagEn;
+	}
 	/* Return if this doesn't concern us. */
 	
 	if (ProcessorNumber != MyProcessorNumber)
