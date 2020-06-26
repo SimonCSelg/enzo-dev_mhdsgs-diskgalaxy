@@ -991,8 +991,10 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 	
 	
 	
-	if (SphereUseParticles && ProcessorNumber == MyProcessorNumber)
-		printf("MHDGalaxyDisk: NumberOfParticles = %"ISYM"\n", NumberOfParticles);
-	
+	if (SphereUseParticles && level == 0)
+	{
+		printf("MHDGalaxyDisk, Processor: %"ISYM": Number of particles on current grid: %"ISYM"\n", MyProcessorNumber, NumberOfParticles);
+		printf("MHDGalaxyDisk, Processor: %"ISYM": Accumulated number of particles: %"ISYM"\n", MyProcessorNumber, CollapseTestParticleCount);
+	}
 	return SUCCESS;
 }
