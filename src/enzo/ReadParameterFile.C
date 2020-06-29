@@ -575,6 +575,7 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
                      DrivenFlowAutoCorrl, DrivenFlowAutoCorrl+1, DrivenFlowAutoCorrl+2);
     
     ret += sscanf(line, "UseSGSModel = %"ISYM, &UseSGSModel);
+    ret += sscanf(line, "SGSTrackInstantaneousSGSEnergies = %"ISYM, &SGSTrackInstantaneousSGSEnergies); // S. Selg (06/2020)
     ret += sscanf(line, "SGSFilterStencil = %"ISYM, &SGSFilterStencil);
     ret += sscanf(line, "SGSFilterWidth = %"FSYM, &SGSFilterWidth);
     ret += sscanf(line, "SGSFilterWeights = %"FSYM"%"FSYM"%"FSYM"%"FSYM,

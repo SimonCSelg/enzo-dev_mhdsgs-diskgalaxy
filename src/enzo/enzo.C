@@ -307,6 +307,7 @@ Eint32 MAIN_NAME(Eint32 argc, char *argv[])
   TIMER_REGISTER("SetBoundaryConditions");
   TIMER_REGISTER("SolveHydroEquations");
   TIMER_REGISTER("MinimumInternalEnergyLimiter");
+  TIMER_REGISTER("SGSTurbulence");
   TIMER_REGISTER("Total");
 
 #ifdef USE_LCAPERF

@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "EnzoTiming.h"
+
 #include "ErrorExceptions.h"
 #include "macros_and_parameters.h"
 #include "typedefs.h"
@@ -290,6 +292,8 @@ int grid::MHDSourceTerms(float **dU, float min_coeff)
   }
 
   if (UseSGSModel) {
+    // S. Selg (06/2020): Add timer
+    TIMER_START("SGSTurbulence");
     // if an explicit filtering operation should be used, otherwise
     // grid-scale quantities are used
     if (SGSFilterWidth > 1.) {
@@ -345,6 +349,7 @@ int grid::MHDSourceTerms(float **dU, float min_coeff)
       fprintf(stderr, "grid::MHDSourceTerms: Error in SGS_AddEMFTerms(dU).\n");
       return FAIL;
     }
+    TIMER_STOP("SGSTurbulence");
   }
   
   /* Add centrifugal force for the shearing box */
