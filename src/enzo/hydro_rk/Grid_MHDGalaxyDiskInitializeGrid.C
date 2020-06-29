@@ -281,7 +281,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			double preCompMass;     // particle mass
 			double preCompDist;     // particle distance towards center
 					// of halo
-			int particle_label;    // just a number, each particle has its own
+			double particle_label;    // just a number, each particle has its own
 
 			// ITERATE HALOS
 			for (sphere = 0; sphere < NumberOfSpheres; sphere++)
@@ -306,7 +306,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 						// WE'LL ASSING VARIABLES TO PARTICLE
 						// DATA INFERRED FROM FILE
 						// READ FILE INTO MEMORY
-						sscanf(line.c_str(), "%lf%lf%lf%lf%lf%lf%lf%lf%d",
+						sscanf(line.c_str(), "%lf%lf%lf%lf%lf%lf%lf%lf%lf",
 							&preCompX,
 							&preCompY,
 							&preCompZ,
