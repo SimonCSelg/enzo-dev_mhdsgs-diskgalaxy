@@ -1804,6 +1804,9 @@ int TransferSubgridActiveParticles(grid* Subgrids[], int NumberOfSubgrids,
 
   int IdentifyDrivingFields(int &Drive1Num, int &Drive2Num, int &Drive3Num);
 
+  /* Identify SGS Fields (S. Selg 06/2020) */
+  int IdentifySGSFields(int &SGSKinEnNum, int &SGSMagEnNum);
+
   /* Identify potential field */
   int IdentifyPotentialField(int &PotenNum);
   int IdentifyPotentialField(int &PotenNum, int &Acce1Num, int &Acce2Num, int &Acce3Num);
