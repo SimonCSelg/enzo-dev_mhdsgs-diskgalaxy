@@ -281,7 +281,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			double preCompMass;     // particle mass
 			double preCompDist;     // particle distance towards center
 					// of halo
-			double preCompInterDist;// mean particle-particle distance
+			double particle_label;    // just a number, each particle has its own
 
 			// ITERATE HALOS
 			for (sphere = 0; sphere < NumberOfSpheres; sphere++)
@@ -315,7 +315,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 							&preCompVelZ,
 							&preCompMass,
 							&preCompDist,
-							&preCompInterDist);
+							&particle_label);
 						// CHECK IF THE PARTICLE FITS ONTO THE
 						// GRID
 						bool isInGrd = (preCompX / LengthUnits + SpherePosition[sphere][0] >= grdXLow) &&
@@ -331,7 +331,7 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 							{
 								// STAGE IV: assign particle properties
 								ParticleMass[npart]        = preCompMass / pow(CellWidth[0][GridStartIndex[0]], 3.0) / (DensityUnits * pow(LengthUnits, 3.0));
-								ParticleNumber[npart]      = CollapseTestParticleCount++;
+								ParticleNumber[npart]      = particle_label;
 								ParticleType[npart]        = PARTICLE_TYPE_DARK_MATTER;
 								ParticlePosition[0][npart] = preCompX / LengthUnits + SpherePosition[sphere][0];
 								ParticlePosition[1][npart] = preCompY / LengthUnits + SpherePosition[sphere][1];
