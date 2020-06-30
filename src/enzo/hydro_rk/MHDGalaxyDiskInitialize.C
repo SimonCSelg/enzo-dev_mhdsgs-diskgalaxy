@@ -293,7 +293,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
    * S. Selg (11/2019): Implementation of Parallel Root Grid IO (PRGIO)
    * =========================================================================
    */
-
+  // A bit of pre-computing
+  // TOP GRID SPACING
+  float TopGridSpacing = float(MetaData.TopGridDims[0]);
   HierarchyEntry *CurrentGrid;
   CurrentGrid = &TopGrid;
   while (CurrentGrid != NULL) {
@@ -334,7 +336,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 		        		MHDGalaxyDiskPressureGradientType,	
 					0,
 					SetBaryonFields,
-					1) == FAIL) {
+					1,
+					TopGridSpacing,
+					MaximumRefinementLevel) == FAIL) {
     			ENZO_FAIL("Error in MHDGalaxyDiskInitializeGrid.");
   			}
 	CurrentGrid = CurrentGrid->NextGridThisLevel;
@@ -415,7 +419,9 @@ int MHDGalaxyDiskInitialize(FILE *fptr, FILE *Outfptr,
 				MHDGalaxyDiskPressureGradientType,
 				level,   // S. Selg (11/2019, used to be level+1)
 				SetBaryonFields,
-				0) == FAIL) 
+				0,
+				TopGridSpacing,
+				MaximumRefinementLevel) == FAIL) 
 				{
 					fprintf(stderr, "Error in MHDGalaxyDiskInitializeGrid.\n");
 					return FAIL;

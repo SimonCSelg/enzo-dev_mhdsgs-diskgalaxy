@@ -117,7 +117,9 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					int PressureGradientType[MAX_SPHERES],
 					int level,
 					int SetBaryonFields,
-					int partitioned)
+					int partitioned,
+					float TopGridSpacing,
+					int maxlevel)
 {
 	/* declarations */
 	
@@ -575,13 +577,35 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 			printf("\nVelocitySound (cm s^-1): %"GSYM"\n", VelocitySound[sphere] * VelocityUnits);
 		
 		double sig=SphereDensity[sphere]*SolarMass/(2.0*pi*SphereCoreRadius[sphere][0]*LengthUnits*SphereCoreRadius[sphere][1]*LengthUnits);
-		
-		int N_x = 500;
-		int N_z = 500;
-		
+		/* S. Selg (06/2020): N_x and N_z are first estimated given the
+		 * maximum refinement level in order to ensure an accurate grid
+		 * spacing. Therefore, we take the ceiling of both N_x and N_z to
+		 * have integer values. We recompute del_x and del_z.
+		 */
+
+//		int N_x = 500;
+//		int N_z = 500;
+                double grid_safety_factor = 5; // corresponding to approx. 500*N_x at dx = 244 pc 
+	        double dx = 1.0 / (TopGridSpacing * pow(RefineBy, MaximumRefinementLevel));
+		// Safety margin: twice the number of cells than indicated by maximum resolution.
+		int N_x = ceil(grid_safety_factor * (1.0 + 
+					SphereCoreRadius[sphere][0] * SphereRadius[sphere][0] / dx));
+		int N_z = ceil(grid_safety_factor * (1.0 + 
+					SphereCoreRadius[sphere][2] * SphereRadius[sphere][2] / dx));
 		double del_x=SphereCoreRadius[sphere][0]*SphereRadius[sphere][0]*LengthUnits/(N_x-1.0);
 		double del_z=SphereCoreRadius[sphere][2]*SphereRadius[sphere][2]*LengthUnits/(N_z-1.0);
-			
+
+		// Writing a message
+		if (MyProcessorNumber == ROOT_PROCESSOR)
+		{
+			printf("\nSetting up Grid for Hydrostatic Disk Iteration\n");
+			printf("\nMaximum achievable resolution, dx = %"GSYM" pc\n", dx * LengthUnits / pc_cm);
+			printf("\nApplying a safety of: %"GSYM"\n", grid_safety_factor);
+			printf("\nNumber of cells in r-direction: N_x = %"ISYM"\n", N_x);
+			printf("\nGrid resolution in r-direction: del_x = %"GSYM" pc\n", del_x / pc_cm);
+			printf("\nNumber of cells in z-direction: N_z = %"ISYM"\n", N_z);
+			printf("\nGrid resolution in z-direction: del_z = %"GSYM" pc\n", del_z / pc_cm);
+		}	
 		Galaxy[sphere] = hydrostatic_disk(N_x, N_z, del_x, del_z, 
 		                                SphereCoreRadius[sphere][0]*LengthUnits, SphereCoreRadius[sphere][2]*LengthUnits,
                                                 sig, VelocitySound[sphere]*VelocityUnits);
