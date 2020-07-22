@@ -119,7 +119,9 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 					int SetBaryonFields,
 					int partitioned,
 					float TopGridSpacing,
-					int maxlevel)
+					int maxlevel,
+					int grid_traditional,
+					float grid_safety_factor)
 {
 	/* declarations */
 	
@@ -582,16 +584,22 @@ int grid::MHDGalaxyDiskInitializeGrid(  int NumberOfSpheres,
 		 * spacing. Therefore, we take the ceiling of both N_x and N_z to
 		 * have integer values. We recompute del_x and del_z.
 		 */
-
-//		int N_x = 500;
-//		int N_z = 500;
-                double grid_safety_factor = 5; // corresponding to approx. 500*N_x at dx = 244 pc 
-	        double dx = 1.0 / (TopGridSpacing * pow(RefineBy, MaximumRefinementLevel));
-		// Safety margin: twice the number of cells than indicated by maximum resolution.
-		int N_x = ceil(grid_safety_factor * (1.0 + 
+		// obtain effective maximum rechable grid resolution
+	 	double dx = 1.0 / (TopGridSpacing * pow(RefineBy, MaximumRefinementLevel));
+		int N_x = 0;
+		int N_z = 0;
+		if (grid_traditional == 1)
+		{
+			N_x = 500;
+			N_z = 500;
+		} else {
+                	//double grid_safety_factor = 5; // corresponding to approx. 500*N_x at dx = 244 pc 
+	       			// Safety margin: twice the number of cells than indicated by maximum resolution.
+			N_x = ceil(grid_safety_factor * (1.0 + 
 					SphereCoreRadius[sphere][0] * SphereRadius[sphere][0] / dx));
-		int N_z = ceil(grid_safety_factor * (1.0 + 
+			N_z = ceil(grid_safety_factor * (1.0 + 
 					SphereCoreRadius[sphere][2] * SphereRadius[sphere][2] / dx));
+		}
 		double del_x=SphereCoreRadius[sphere][0]*SphereRadius[sphere][0]*LengthUnits/(N_x-1.0);
 		double del_z=SphereCoreRadius[sphere][2]*SphereRadius[sphere][2]*LengthUnits/(N_z-1.0);
 
