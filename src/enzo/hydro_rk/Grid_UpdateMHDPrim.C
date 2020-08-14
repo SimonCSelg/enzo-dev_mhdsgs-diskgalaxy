@@ -265,9 +265,14 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 	if (etot < 0 && EOSType == 0) {
 	  float v2_old = vx_old*vx_old + vy_old*vy_old + vz_old*vz_old;
 	  float B2_old = Bx_old*vx_old + By_old*By_old + Bz_old*Bz_old;
-	  printf("UpdateMHDPrim: tau < 0. etot_old=%"GSYM", etot=%"GSYM", etot_new=%"GSYM", v2=%"GSYM", v2old=%"GSYM", dU[iTau] = %"GSYM", dtFixed = %"GSYM"\n", 
-		 Tau_old/rho_old, Tau/rho, Tau_new/D_new, v2, v2_old, dU[iEtot][n]*CellWidth[0][0]/dtFixed, dtFixed);
-	  printf("rho_new=%"GSYM", rho=%"GSYM", rho_old=%"GSYM", B2_old/rho_old=%"GSYM"\n", D_new, rho, rho_old, B2_old/rho_old);
+	  if (! (output_block)) // S. Selg (13.08.2020) prevenvt the log file 
+		                // from growing too fast
+	  {
+	  	printf("UpdateMHDPrim: tau < 0. etot_old=%"GSYM", etot=%"GSYM", etot_new=%"GSYM", v2=%"GSYM", v2old=%"GSYM", dU[iTau] = %"GSYM", dtFixed = %"GSYM"\n", 
+			 Tau_old/rho_old, Tau/rho, Tau_new/D_new, v2, v2_old, dU[iEtot][n]*CellWidth[0][0]/dtFixed, dtFixed);
+	  	printf("rho_new=%"GSYM", rho=%"GSYM", rho_old=%"GSYM", B2_old/rho_old=%"GSYM"\n", D_new, rho, rho_old, B2_old/rho_old);
+		printf("Printing this message only once per grid!\n");
+	  }
 	  //return FAIL;
 	}
  
