@@ -242,19 +242,22 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 		// ADD TIMER
 		{       
 			TIMER_START("MinimumInternalEnergyLimiter");
-			if (! (output_block))
+			if (debug)
 			{
-				printf("Minimum Internal Energy Limiter, "
+				if (! (output_block))
+				{
+					printf("Minimum Internal Energy Limiter, "
 				       "WARNING: etot = %.6e, eint = %.6e, "
 				       "0.5v2 = %.6e, 0.5B2/rho = %.6e!" 
 				       "Correcting etot to %.6e\n",
 					etot, etot - temp_v2 - temp_B2, temp_v2,
 					temp_B2, temp_etot_min);
-				printf("Minimum Internal Energy Limiter, "
+					printf("Minimum Internal Energy Limiter, "
 				       "New temperature: %.6e at mu = %.2e\n", 
 				       MinimumInternalEnergyLimiter_Temperature,
 				       Mu);
-				output_block=true;
+					output_block=true;
+				}
 			}
 			etot = temp_etot_min;
 			TIMER_STOP("MinimumInternalEnergyLimiter");
@@ -265,7 +268,7 @@ int grid::UpdateMHDPrim(float **dU, float c1, float c2)
 	if (etot < 0 && EOSType == 0) {
 	  float v2_old = vx_old*vx_old + vy_old*vy_old + vz_old*vz_old;
 	  float B2_old = Bx_old*vx_old + By_old*By_old + Bz_old*Bz_old;
-	  if (! (output_block)) // S. Selg (13.08.2020) prevenvt the log file 
+	  if (debug) // S. Selg (13.08.2020) prevenvt the log file 
 		                // from growing too fast
 	  {
 	  	printf("UpdateMHDPrim: tau < 0. etot_old=%"GSYM", etot=%"GSYM", etot_new=%"GSYM", v2=%"GSYM", v2old=%"GSYM", dU[iTau] = %"GSYM", dtFixed = %"GSYM"\n", 
