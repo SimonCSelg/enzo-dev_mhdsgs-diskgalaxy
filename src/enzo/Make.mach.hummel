@@ -24,8 +24,9 @@ MACH_FILE  = Make.mach.hummel
 #-----------------------------------------------------------------------
 
 #LOCAL_HDF5_INSTALL = /home/stuf315/hdf5-1.8.19/build
-#LOCAL_HDF5_INSTALL = /work/senv428/local/hdf5-1.10.1
-LOCAL_HDF5_INSTALL = /home/senv428/local/hdf5
+#LOCAL_HDF5_INSTALL = work/senv428/local/hdf5-1.10.1
+LOCAL_HDF5_INSTALL = $(HDF5_PATH)
+#LOCAL_HDF5_INSTALL = /home/senv428/local/hdf5
 
 #-----------------------------------------------------------------------
 # Compiler settings
