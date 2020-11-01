@@ -10,14 +10,14 @@
 #
 # This configuration assumes that build-essentials, gfortran, 
 # OpenMPI and HDF5 have been installed using apt-get.
-#
+# INTEL-COMPILERS and INTEL MPI
 # MODIFIED:	Simon Selg (simon.selg@hs.uni-hamburg.de)
-# DATE:         2018-11-22 
+# DATE:         2020-10-30
 #=======================================================================
 
 MACH_TEXT  = Hummel Cluster
 MACH_VALID = 1
-MACH_FILE  = Make.mach.hummel
+MACH_FILE  = Make.mach.hummel_intel
 
 #-----------------------------------------------------------------------
 # Install paths (local variables)
@@ -37,25 +37,26 @@ MACH_CPP       = cpp # C preprocessor command
 # With MPI
 
 MACH_CC_MPI    = mpicc # C compiler when using MPI
-MACH_CXX_MPI   = mpic++ #mpic++ # C++ compiler when using MPI
-MACH_FC_MPI    = gfortran # Fortran 77 compiler when using MPI
-MACH_F90_MPI   = gfortran # Fortran 90 compiler when using MPI
-MACH_LD_MPI    = mpic++ # Linker when using MPI
-MACH_CUDACOMPILER = nvcc
+MACH_CXX_MPI   = mpicxx #mpic++ # C++ compiler when using MPI
+MACH_FC_MPI    = mpifc # Fortran 77 compiler when using MPI
+MACH_F90_MPI   = mpifc # Fortran 90 compiler when using MPI
+MACH_LD_MPI    = mpicxx # Linker when using MPI
+#MACH_CUDACOMPILER = nvcc
 
 # Without MPI
 
-MACH_CC_NOMPI  = gcc # C compiler when not using MPI
-MACH_CXX_NOMPI = g++ # C++ compiler when not using MPI
-MACH_FC_NOMPI  = gfortran # Fortran 77 compiler when not using MPI
-MACH_F90_NOMPI = gfortran # Fortran 90 compiler when not using MPI
-MACH_LD_NOMPI  = g++ # Linker when not using MPI
-MACH_CUDACOMPILER = nvcc
+MACH_CC_NOMPI  = $(MACH_CC_MPI) # C compiler when not using MPI
+MACH_CXX_NOMPI = $(MACH_CXX_MPI) # C++ compiler when not using MPI
+MACH_FC_NOMPI  = $(MACH_FC_MPI) # Fortran 77 compiler when not using MPI
+MACH_F90_NOMPI = $(MACH_F90_MPI) # Fortran 90 compiler when not using MPI
+MACH_LD_NOMPI  = $(MACH_LD_MPI) # Linker when not using MPI
+#MACH_CUDACOMPILER = nvcc
 
 #-----------------------------------------------------------------------
 # Machine-dependent defines
 #-----------------------------------------------------------------------
 
+# MACH_DEFINES   = -DHAVE_GNUPLOT -DLINUX -DH5_USE_16_API -DMPICH_IGNORE_CXX_SEEK
 MACH_DEFINES   = -DLINUX -DH5_USE_16_API
 #MACH_DEFINES   = -DLINUX -DH5_USE_16_API -DSAB # SAB is the pre-processor 
 						# direcitve enabling 
@@ -71,7 +72,7 @@ MACH_CFLAGS   =
 MACH_CXXFLAGS =
 MACH_FFLAGS   = -fno-second-underscore -ffixed-line-length-132
 MACH_F90FLAGS = -fno-second-underscore
-MACH_LDFLAGS  = 
+MACH_LDFLAGS  = -Wl,-rpath=/home/senv428/local/hdf5/lib
 
 #-----------------------------------------------------------------------
 # Optimization flags
