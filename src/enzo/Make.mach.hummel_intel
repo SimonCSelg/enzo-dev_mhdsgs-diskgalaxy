@@ -72,7 +72,7 @@ MACH_CFLAGS   =
 MACH_CXXFLAGS =
 MACH_FFLAGS   = -fno-second-underscore -ffixed-line-length-132
 MACH_F90FLAGS = -fno-second-underscore
-MACH_LDFLAGS  = 
+MACH_LDFLAGS  = -Wl,-rpath=/home/senv428/local/hdf5/lib
 
 #-----------------------------------------------------------------------
 # Optimization flags
